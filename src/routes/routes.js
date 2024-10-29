@@ -2,7 +2,6 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 const path = require('path');
-const sharp = require('sharp');
 const router = express.Router();
 const pool = require('../config/dbConfig');
 
@@ -34,25 +33,11 @@ const uploadImage = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }
-}).fields([{ name: 'image', maxCount: 1 }, { name: 'userId', maxCount: 1 }]);
+}).single('image'); // Cambiamos `.fields` por `.single`
 
-
-// Middleware de procesamiento de imagen
-const processImage = async (req, res, next) => {
-  if (!req.file) return next();
-
-  try {
-    const resizedImagePath = path.join(__dirname, '..', '..', 'public', 'media', 'images', 'resized', req.file.filename);
-    await sharp(req.file.path).resize(800, 800).toFile(resizedImagePath);
-    req.file.resizedPath = resizedImagePath;
-    next();
-  } catch (err) {
-    next(err);
-  }
-};
-
+// Ruta para subir y almacenar la URL de la imagen
 router.post('/upload', (req, res) => {
-  uploadImage(req, res, (err) => {
+  uploadImage(req, res, async (err) => {
     if (err) {
       console.error("Error uploading image:", err.message);
       return res.status(400).json({ message: err.message });
@@ -66,28 +51,25 @@ router.post('/upload', (req, res) => {
       return res.status(400).json({ message: 'User ID is required to upload the image.' });
     }
 
-    processImage(req, res, async () => {
-      if (!req.files.image) {
-        console.error("No file found after upload");
-        return res.status(400).json({ message: "No file uploaded" });
-      }
+    if (!req.file) {
+      console.error("No file found after upload");
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
-      const imageUrl = `/media/images/resized/${req.files.image[0].filename}`;
-      try {
-        const updateQuery = 'UPDATE users SET image = $1 WHERE id = $2';
-        const values = [imageUrl, userId];
-        await pool.query(updateQuery, values);
+    const imageUrl = `/media/images/${req.file.filename}`;
+    try {
+      const updateQuery = 'UPDATE users SET image = $1 WHERE id = $2';
+      const values = [imageUrl, userId];
+      await pool.query(updateQuery, values);
 
-        console.log("Image URL stored in database for user:", userId);
-        res.json({ profilePicURL: imageUrl, message: 'Imagen subida y URL almacenada correctamente' });
-      } catch (dbError) {
-        console.error("Error updating database:", dbError);
-        res.status(500).json({ message: 'Error storing image URL in database' });
-      }
-    });
+      console.log("Image URL stored in database for user:", userId);
+      res.json({ profilePicURL: imageUrl, message: 'Imagen subida y URL almacenada correctamente' });
+    } catch (dbError) {
+      console.error("Error updating database:", dbError);
+      res.status(500).json({ message: 'Error storing image URL in database' });
+    }
   });
 });
-
 
 // Ruta de inicio de sesión
 router.post('/login', async (req, res) => {
@@ -103,7 +85,7 @@ router.post('/login', async (req, res) => {
       res.json({
         success: true,
         message: "Login successful",
-        user: { id_usuario: user.id, name: user.name, lastname: user.lastname, email: user.email, phone: user.phone, rol: user.rol } // Asegúrate de incluir aquí los datos necesarios
+        user: { id_usuario: user.id, name: user.name, lastname: user.lastname, email: user.email, phone: user.phone, rol: user.rol }
       });
     } else {
       res.status(401).json({ success: false, message: "Invalid credentials" });
@@ -113,7 +95,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
 
 // Ruta de registro
 router.post('/register', async (req, res) => {
