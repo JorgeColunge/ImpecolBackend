@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const routes = require('./routes/routes');
+const path = require('path');
 
 const PORT = process.env.PORT || 10000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -17,6 +18,8 @@ app.use(cors({
 
 app.use(bodyParser.json());
 app.use('/api', routes);
+
+app.use('/media', express.static(path.join(__dirname, 'public', 'media')));
 
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en el puerto ${PORT}`);

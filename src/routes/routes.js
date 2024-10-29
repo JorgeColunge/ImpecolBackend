@@ -98,12 +98,22 @@ router.post('/login', async (req, res) => {
     
     const user = result.rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
-    isMatch ? res.json({ success: true, message: "Login successful" }) : res.status(401).json({ success: false, message: "Invalid credentials" });
+    
+    if (isMatch) {
+      res.json({
+        success: true,
+        message: "Login successful",
+        user: { id_usuario: user.id, name: user.name, lastname: user.lastname, email: user.email, phone: user.phone, rol: user.rol } // Asegúrate de incluir aquí los datos necesarios
+      });
+    } else {
+      res.status(401).json({ success: false, message: "Invalid credentials" });
+    }
   } catch (error) {
     console.error("Database error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 // Ruta de registro
 router.post('/register', async (req, res) => {
