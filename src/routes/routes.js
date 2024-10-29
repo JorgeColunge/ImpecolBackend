@@ -9,7 +9,7 @@ const pool = require('../config/dbConfig');
 // Configuración de almacenamiento con Multer
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', '..', 'public', 'media', 'images', 'resized'));
+    cb(null, path.join(__dirname, '..', '..', 'public', 'media', 'images'));
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -17,23 +17,32 @@ const storage = multer.diskStorage({
   }
 });
 
+// Definición de fileFilter para permitir solo imágenes (jpeg, jpg, png, gif)
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|gif/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (extname && mimetype) {
+    cb(null, true);
+  } else {
+    cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, gif)'));
+  }
+};
+
 const uploadImage = multer({
   storage: storage,
-  fileFilter: function(req, file, cb) {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    extname && mimetype ? cb(null, true) : cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, gif)'));
-  },
-  limits: { fileSize: 5 * 1024 * 1024 } // Límite de 5MB
-}).single('image');
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }
+}).fields([{ name: 'image', maxCount: 1 }, { name: 'userId', maxCount: 1 }]);
+
 
 // Middleware de procesamiento de imagen
 const processImage = async (req, res, next) => {
   if (!req.file) return next();
 
   try {
-    const resizedImagePath = path.join(__dirname, '..', 'public', 'media', 'images', 'resized', req.file.filename);
+    const resizedImagePath = path.join(__dirname, '..', '..', 'public', 'media', 'images', 'resized', req.file.filename);
     await sharp(req.file.path).resize(800, 800).toFile(resizedImagePath);
     req.file.resizedPath = resizedImagePath;
     next();
@@ -42,16 +51,43 @@ const processImage = async (req, res, next) => {
   }
 };
 
-// Ruta para subir y procesar la imagen
 router.post('/upload', (req, res) => {
   uploadImage(req, res, (err) => {
-    if (err) return res.status(400).json({ message: err.message });
+    if (err) {
+      console.error("Error uploading image:", err.message);
+      return res.status(400).json({ message: err.message });
+    }
 
-    processImage(req, res, () => {
-      res.json({ profilePicURL: `/media/images/resized/${req.file.filename}` });
+    const userId = req.body.userId;
+    console.log("Received User ID:", userId);
+
+    if (!userId) {
+      console.error("User ID is missing in request");
+      return res.status(400).json({ message: 'User ID is required to upload the image.' });
+    }
+
+    processImage(req, res, async () => {
+      if (!req.files.image) {
+        console.error("No file found after upload");
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const imageUrl = `/media/images/resized/${req.files.image[0].filename}`;
+      try {
+        const updateQuery = 'UPDATE users SET image = $1 WHERE id = $2';
+        const values = [imageUrl, userId];
+        await pool.query(updateQuery, values);
+
+        console.log("Image URL stored in database for user:", userId);
+        res.json({ profilePicURL: imageUrl, message: 'Imagen subida y URL almacenada correctamente' });
+      } catch (dbError) {
+        console.error("Error updating database:", dbError);
+        res.status(500).json({ message: 'Error storing image URL in database' });
+      }
     });
   });
 });
+
 
 // Ruta de inicio de sesión
 router.post('/login', async (req, res) => {
