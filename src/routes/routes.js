@@ -143,4 +143,16 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Nueva ruta para obtener todos los usuarios registrados
+router.get('/users', async (req, res) => {
+  try {
+    // Selecciona los campos que deseas devolver, por ejemplo: id, nombre, apellido, email, rol
+    const result = await pool.query('SELECT id, name, lastname, email, rol, image FROM users');
+    res.json(result.rows); // Enviar la lista de usuarios como JSON
+  } catch (error) {
+    console.error("Error al obtener usuarios:", error);
+    res.status(500).json({ message: 'Error al obtener usuarios' });
+  }
+});
+
 module.exports = router;
