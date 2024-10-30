@@ -35,7 +35,38 @@ const uploadImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 }).single('image'); // Cambiamos `.fields` por `.single`
 
-// Ruta para subir y almacenar la URL de la imagen
+// Ruta para actualizar el perfil del usuario (datos y foto)
+router.post('/api/updateProfile', uploadImage, async (req, res) => {
+  const { name, lastname, email, phone, userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  // Construye la URL de la imagen si se subió un archivo
+  let imageUrl = null;
+  if (req.file) {
+    imageUrl = `/media/images/${req.file.filename}`;
+  }
+
+  try {
+    // Consulta para actualizar el perfil del usuario
+    const query = `
+      UPDATE users 
+      SET name = $1, lastname = $2, email = $3, phone = $4, photo = COALESCE($5, photo) 
+      WHERE id = $6
+    `;
+    const values = [name, lastname, email, phone, imageUrl, userId];
+    await pool.query(query, values);
+
+    res.json({ message: 'Perfil actualizado exitosamente', profilePicURL: imageUrl });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: 'Error al actualizar el perfil' });
+  }
+});
+
+// Ruta para subir y almacenar la URL de la imagen (sin actualizar otros datos)
 router.post('/upload', (req, res) => {
   uploadImage(req, res, async (err) => {
     if (err) {
