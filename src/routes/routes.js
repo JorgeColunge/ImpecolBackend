@@ -36,7 +36,7 @@ const uploadImage = multer({
 }).single('image'); // Cambiamos `.fields` por `.single`
 
 // Ruta para actualizar el perfil del usuario (datos y foto)
-router.post('/api/updateProfile', uploadImage, async (req, res) => {
+router.post('/updateProfile', uploadImage, async (req, res) => {
   const { name, lastname, email, phone, userId } = req.body;
 
   if (!userId) {
@@ -47,13 +47,13 @@ router.post('/api/updateProfile', uploadImage, async (req, res) => {
   let imageUrl = null;
   if (req.file) {
     imageUrl = `/media/images/${req.file.filename}`;
-  }
+  }  
 
   try {
     // Consulta para actualizar el perfil del usuario
     const query = `
       UPDATE users 
-      SET name = $1, lastname = $2, email = $3, phone = $4, photo = COALESCE($5, photo) 
+      SET name = $1, lastname = $2, email = $3, phone = $4, image = COALESCE($5, image) 
       WHERE id = $6
     `;
     const values = [name, lastname, email, phone, imageUrl, userId];
@@ -116,7 +116,7 @@ router.post('/login', async (req, res) => {
       res.json({
         success: true,
         message: "Login successful",
-        user: { id_usuario: user.id, name: user.name, lastname: user.lastname, email: user.email, phone: user.phone, rol: user.rol }
+        user: { id_usuario: user.id, name: user.name, lastname: user.lastname, email: user.email, phone: user.phone, rol: user.rol, image: user.image }
       });
     } else {
       res.status(401).json({ success: false, message: "Invalid credentials" });
