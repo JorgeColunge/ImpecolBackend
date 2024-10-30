@@ -155,4 +155,33 @@ router.get('/users', async (req, res) => {
   }
 });
 
+
+// Ruta para eliminar un usuario
+router.delete('/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.status(200).json({ message: 'Usuario eliminado exitosamente' });
+  } catch (error) {
+    console.error("Error al eliminar usuario:", error);
+    res.status(500).json({ message: 'Error al eliminar el usuario' });
+  }
+});
+
+// Ruta para obtener un usuario por ID
+router.get('/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT id, name, lastname, rol, email, phone, image FROM users WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error al obtener usuario:", error);
+    res.status(500).json({ message: 'Error al obtener el usuario' });
+  }
+});
+
+
 module.exports = router;
