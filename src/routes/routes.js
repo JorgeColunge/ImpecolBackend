@@ -4,6 +4,12 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const pool = require('../config/dbConfig');
+const { authenticateUser } = require('./authMiddleware');
+
+// Aplicar middleware de autenticación antes de la ruta de registro
+router.post('/register', authenticateUser, upload.single('image'), async (req, res) => {
+  // Lógica de registro de usuario (ya definida arriba)
+});
 
 // Configuración de almacenamiento con Multer
 const storage = multer.diskStorage({
