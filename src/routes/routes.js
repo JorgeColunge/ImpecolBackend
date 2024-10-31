@@ -207,5 +207,92 @@ router.get('/users/:id', async (req, res) => {
   }
 });
 
+// Crear cliente
+router.post('/clients', async (req, res) => {
+  const { name, address, phone, email, representative, document_type, document_number, contact_name, contact_phone, rut } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO clients (name, address, phone, email, representative, document_type, document_number, contact_name, contact_phone, rut)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *
+    `;
+    const values = [name, address, phone, email, representative, document_type, document_number, contact_name, contact_phone, rut];
+    const result = await pool.query(query, values);
+
+    res.status(201).json({ success: true, message: "Client created successfully", client: result.rows[0] });
+  } catch (error) {
+    console.error("Error creating client:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Obtener todos los clientes
+router.get('/clients', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM clients');
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching clients:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Obtener un cliente por ID
+router.get('/clients/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('SELECT * FROM clients WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Client not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching client:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Editar cliente
+router.put('/clients/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, address, phone, email, representative, document_type, document_number, contact_name, contact_phone, rut } = req.body;
+
+  try {
+    const query = `
+      UPDATE clients
+      SET name = $1, address = $2, phone = $3, email = $4, representative = $5, document_type = $6, document_number = $7,
+          contact_name = $8, contact_phone = $9, rut = $10
+      WHERE id = $11 RETURNING *
+    `;
+    const values = [name, address, phone, email, representative, document_type, document_number, contact_name, contact_phone, rut, id];
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Client not found" });
+    }
+    res.json({ success: true, message: "Client updated successfully", client: result.rows[0] });
+  } catch (error) {
+    console.error("Error updating client:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Eliminar cliente
+router.delete('/clients/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM clients WHERE id = $1 RETURNING *', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Client not found" });
+    }
+    res.json({ success: true, message: "Client deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting client:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 module.exports = router;
