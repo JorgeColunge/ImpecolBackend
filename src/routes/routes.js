@@ -1144,6 +1144,7 @@ router.get('/stations/:id', async (req, res) => {
 });
 
 // Crear una nueva estación
+// Crear una nueva estación
 router.post('/stations', async (req, res) => {
   const { description, category, type, control_method, client_id, qr_code } = req.body;
 
@@ -1190,7 +1191,6 @@ router.post('/stations', async (req, res) => {
     res.status(500).json({ success: false, message: 'Error creating station', error: error.message });
   }
 });
-
 
 // Actualizar una estación existente
 router.put('/stations/:id', async (req, res) => {
