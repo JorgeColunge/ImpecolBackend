@@ -18,6 +18,7 @@ const vm = require('vm');
 const QRCode = require('qrcode');
 const { uploadFile, getSignedUrl, deleteObject  } = require('../config/s3Service');
 const dotenv = require('dotenv');
+const { convertToPDF } = require("../config/convertToPDF");
 
 const { exec } = require('child_process');
 
@@ -729,9 +730,7 @@ router.get('/clients', async (req, res) => {
 
     // Generar URLs prefirmadas para las imágenes de cada usuario
     for (let client of clients) {
-      console.log("prefirmando");
-
-      // Prefirmar el campo photo
+      console.log("prefirmando")
       if (client.photo) {
         try {
           const bucketName = 'fumiplagax';
@@ -745,40 +744,15 @@ router.get('/clients', async (req, res) => {
             client.photo = await getSignedUrl(bucketName, key); // Generar enlace prefirmado
             console.log("imagen prefirmada", client.photo);
           } else {
-            console.warn(`El usuario con ID ${client.id} tiene una imagen malformada en el campo photo.`);
+            console.warn(`El usuario con ID ${client.id} tiene una imagen malformada.`);
             client.photo = null; // Dejar la imagen como null si está malformada
           }
         } catch (err) {
-          console.error(`Error generando URL prefirmada para el usuario con ID ${client.id} en el campo photo:`, err);
+          console.error(`Error generando URL prefirmada para el usuario con ID ${user.id}:`, err);
           client.photo = null; // Manejar errores y dejar la imagen como null
         }
       } else {
         client.photo = null; // Dejar como null si no tiene imagen
-      }
-
-      // Prefirmar el campo rut
-      if (client.rut) {
-        try {
-          const bucketName = 'fumiplagax';
-
-          // Validar si la URL contiene el key esperado
-          const key = client.rut.includes('.amazonaws.com/')
-            ? client.rut.split('.amazonaws.com/')[1]
-            : null;
-
-          if (key) {
-            client.rut = await getSignedUrl(bucketName, key); // Generar enlace prefirmado
-            console.log("rut prefirmado", client.rut);
-          } else {
-            console.warn(`El usuario con ID ${client.id} tiene una imagen malformada en el campo rut.`);
-            client.rut = null; // Dejar el rut como null si está malformado
-          }
-        } catch (err) {
-          console.error(`Error generando URL prefirmada para el usuario con ID ${client.id} en el campo rut:`, err);
-          client.rut = null; // Manejar errores y dejar el rut como null
-        }
-      } else {
-        client.rut = null; // Dejar como null si no tiene rut
       }
     }
 
@@ -801,10 +775,9 @@ router.get('/clients/:id', async (req, res) => {
     }
     const client = result.rows[0];
 
-    console.log("foto cliente: ", client.photo);
-    console.log("rut cliente: ", client.rut);
+    console.log("foto cliente: ",client.photo);
 
-    // Prefirmar el campo photo
+    // Generar URL prefirmada si el usuario tiene una imagen válida
     if (client.photo) {
       try {
         const bucketName = 'fumiplagax';
@@ -816,42 +789,17 @@ router.get('/clients/:id', async (req, res) => {
 
         if (key) {
           client.photo = await getSignedUrl(bucketName, key); // Generar enlace prefirmado
-          console.log("imagen prefirmada: ", client.photo);
+          console.log("imagen prefirmada: ", client.photo)
         } else {
-          console.warn(`El usuario con ID ${client.id} tiene una imagen malformada en el campo photo.`);
+          console.warn(`El usuario con ID ${user.id} tiene una imagen malformada.`);
           client.photo = null; // Dejar la imagen como null si está malformada
         }
       } catch (err) {
-        console.error(`Error generando URL prefirmada para el usuario con ID ${client.id} en el campo photo:`, err);
+        console.error(`Error generando URL prefirmada para el usuario con ID ${user.id}:`, err);
         client.photo = null; // Manejar errores y dejar la imagen como null
       }
     } else {
       client.photo = null; // Dejar como null si no tiene imagen
-    }
-
-    // Prefirmar el campo rut
-    if (client.rut) {
-      try {
-        const bucketName = 'fumiplagax';
-
-        // Validar si la URL contiene el key esperado
-        const key = client.rut.includes('.amazonaws.com/')
-          ? client.rut.split('.amazonaws.com/')[1]
-          : null;
-
-        if (key) {
-          client.rut = await getSignedUrl(bucketName, key); // Generar enlace prefirmado
-          console.log("rut prefirmado: ", client.rut);
-        } else {
-          console.warn(`El usuario con ID ${client.id} tiene una imagen malformada en el campo rut.`);
-          client.rut = null; // Dejar el rut como null si está malformado
-        }
-      } catch (err) {
-        console.error(`Error generando URL prefirmada para el usuario con ID ${client.id} en el campo rut:`, err);
-        client.rut = null; // Manejar errores y dejar el rut como null
-      }
-    } else {
-      client.rut = null; // Dejar como null si no tiene rut
     }
 
     res.json(client);
@@ -993,35 +941,63 @@ router.delete('/clients/:id', async (req, res) => {
   }
 });
 
-// Crear servicio
 router.post('/services', async (req, res) => {
-  const { service_type, description, duration, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion } = req.body;
+  const {
+    service_type,
+    description,
+    pest_to_control,
+    intervention_areas,
+    category,
+    quantity_per_month,
+    client_id,
+    value,
+    created_by,
+    responsible,
+    companion,
+  } = req.body;
 
   try {
+    // Asegúrate de que los valores vacíos sean tratados como null
+    const formattedData = {
+      service_type,
+      description,
+      pest_to_control: pest_to_control || null,
+      intervention_areas: intervention_areas || null,
+      category: category || null,
+      quantity_per_month: quantity_per_month || null,
+      client_id: client_id || null,
+      value: value || null,
+      created_by,
+      responsible: responsible || null,
+      companion: companion || null,
+    };
+
     // Insertar el servicio en la tabla
     const query = `
-      INSERT INTO services (service_type, description, duration, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion)
+      INSERT INTO services (service_type, description, pest_to_control, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *
     `;
-    const values = [service_type, description, duration, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion];
+    const values = Object.values(formattedData);
     const result = await pool.query(query, values);
 
     const service = result.rows[0]; // Servicio creado
     const notificationMessage = `Tu servicio ${service.id} ha sido creado con éxito.`;
 
     // Notificar al responsable
-    const notificationQuery = `
-      INSERT INTO notifications (user_id, notification, state)
-      VALUES ($1, $2, $3) RETURNING *
-    `;
-    const responsibleNotificationValues = [responsible, notificationMessage, 'pending'];
-    const responsibleNotificationResult = await pool.query(notificationQuery, responsibleNotificationValues);
+    if (responsible) {
+      const notificationQuery = `
+        INSERT INTO notifications (user_id, notification, state)
+        VALUES ($1, $2, $3) RETURNING *
+      `;
+      const responsibleNotificationValues = [responsible, notificationMessage, 'pending'];
+      const responsibleNotificationResult = await pool.query(notificationQuery, responsibleNotificationValues);
 
-    // Emitir la notificación al responsable
-    req.io.to(responsible.toString()).emit('notification', {
-      user_id: responsible,
-      notification: responsibleNotificationResult.rows[0],
-    });
+      // Emitir la notificación al responsable
+      req.io.to(responsible.toString()).emit('notification', {
+        user_id: responsible,
+        notification: responsibleNotificationResult.rows[0],
+      });
+    }
 
     if(client_id===created_by){
       const notificationMessage = `El servicio solicitado fue aprobado por nuestro equipo, puedes revisar la información y proceder con el agendamiento.`;
@@ -1042,34 +1018,23 @@ router.post('/services', async (req, res) => {
 
     // Procesar el campo companion (acompañantes)
     let parsedCompanion = [];
-    console.log(`Valor inicial de companion: ${companion}`); // Log inicial
-
     if (typeof companion === 'string') {
       if (companion.startsWith('{') && companion.endsWith('}')) {
-        console.log(`Companion detectado como formato JSON-like.`);
         parsedCompanion = JSON.parse(companion.replace(/'/g, '"'));
       } else if (companion.includes(',')) {
-        console.log(`Companion detectado como lista separada por comas.`);
         parsedCompanion = companion.split(',').map(id => id.trim());
       } else {
-        console.log(`Companion detectado como string simple.`);
         parsedCompanion = [companion];
       }
     } else if (typeof companion === 'number') {
-      console.log(`Companion detectado como número simple.`);
       parsedCompanion = [companion.toString()];
     } else if (Array.isArray(companion)) {
-      console.log(`Companion detectado como array.`);
       parsedCompanion = companion.map(id => id.toString());
-    } else {
-      console.error(`Formato de companion no soportado: ${companion}`);
     }
 
     // Iterar sobre los IDs de los acompañantes
     if (parsedCompanion.length > 0) {
-      console.log(`Iniciando notificaciones para acompañantes: ${JSON.stringify(parsedCompanion)}`);
       for (let companionId of parsedCompanion) {
-        console.log(`Procesando notificación para el acompañante ID: ${companionId}`);
         try {
           const companionNotificationValues = [companionId, notificationMessage, 'pending'];
           const companionNotificationResult = await pool.query(notificationQuery, companionNotificationValues);
@@ -1079,13 +1044,10 @@ router.post('/services', async (req, res) => {
             user_id: companionId,
             notification: companionNotificationResult.rows[0],
           });
-          console.log(`Notificación emitida al acompañante ${companionId}: ${notificationMessage}`);
         } catch (notifError) {
           console.error(`Error al enviar notificación al acompañante ${companionId}: ${notifError.message}`);
         }
       }
-    } else {
-      console.warn("No se enviaron notificaciones a acompañantes. Lista vacía o formato no soportado.");
     }
 
     // Crear el evento para el frontend
@@ -1102,7 +1064,6 @@ router.post('/services', async (req, res) => {
     res.status(500).json({ success: false, message: "Error interno del servidor" });
   }
 });
-
 
 // Obtener todos los servicios
 router.get('/services', async (req, res) => {
@@ -1759,6 +1720,7 @@ router.get('/get-documents', async (req, res) => {
   const { entity_type, entity_id } = req.query;
 
   try {
+    // Validar los parámetros requeridos
     if (!entity_type || !entity_id) {
       return res.status(400).json({
         success: false,
@@ -1766,39 +1728,16 @@ router.get('/get-documents', async (req, res) => {
       });
     }
 
+    // Consultar los documentos de la base de datos
     const result = await pool.query(
       'SELECT * FROM generated_documents WHERE entity_type = $1 AND entity_id = $2',
       [entity_type, entity_id]
     );
 
-    const documents = result.rows;
-
-    for (let document of documents) {
-      if (document.document_url && document.document_url.includes('.amazonaws.com/')) {
-        const bucketName = 'fumiplagax';
-        let key = document.document_url.split('.amazonaws.com/')[1];
-
-        // Decodifica la clave si está doblemente codificada
-        key = decodeURIComponent(key);
-
-        if (key) {
-          try {
-            document.signed_url = await getSignedUrl(bucketName, key);
-          } catch (urlError) {
-            console.warn(`Failed to generate signed URL for document ID ${document.id}:`, urlError);
-            document.signed_url = null;
-          }
-        } else {
-          document.signed_url = null;
-        }
-      } else {
-        document.signed_url = null;
-      }
-    }
-
+    // Devolver los documentos sin prefirmar las URLs
     res.json({
       success: true,
-      documents: documents
+      documents: result.rows
     });
   } catch (error) {
     console.error("Error al obtener documentos:", error);
@@ -1809,6 +1748,354 @@ router.get('/get-documents', async (req, res) => {
     });
   }
 });
+
+router.post("/edit-googledrive", async (req, res) => {
+  const { s3Url } = req.body;
+
+  try {
+    // Validar parámetros
+    if (!s3Url) {
+      return res.status(400).json({
+        success: false,
+        message: "El parámetro 's3Url' es obligatorio.",
+      });
+    }
+
+    // Llamar a la Web App de Apps Script
+    const response = await axios.post(
+      "https://script.google.com/macros/s/AKfycbzB7QfHU-HZEJI98oujDdN_3wqa8vfRL-SIl7yk6Jj62c2JO8bKS0JSCCBsDEbA0FJx/exec",
+      { s3Url }
+    );
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || "Error en Apps Script");
+    }
+
+    // Respuesta exitosa
+    res.json({
+      success: true,
+      publicUrl: response.data.publicUrl,
+      fileId: response.data.fileId,
+    });
+  } catch (error) {
+    console.error("Error al procesar el documento:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      error: error.message,
+    });
+  }
+});
+
+router.post("/replace-google-drive-url", async (req, res) => {
+  const { googleDriveId, generatedDocumentId } = req.body;
+
+  try {
+      // Validar parámetros
+      if (!googleDriveId || !generatedDocumentId) {
+          return res.status(400).json({
+              success: false,
+              message: "Los parámetros 'googleDriveId' y 'generatedDocumentId' son obligatorios.",
+          });
+      }
+
+      // Obtener la URL actual del documento desde la base de datos
+      const fetchQuery = `
+          SELECT document_url FROM generated_documents WHERE id = $1;
+      `;
+      const fetchResult = await pool.query(fetchQuery, [generatedDocumentId]);
+
+      if (fetchResult.rowCount === 0) {
+          return res.status(404).json({
+              success: false,
+              message: "No se encontró el documento en la base de datos.",
+          });
+      }
+
+      const oldDocumentUrl = fetchResult.rows[0].document_url;
+
+      // Llamar a la Web App de Apps Script para obtener el archivo de Google Drive
+      const appsScriptUrl =
+          "https://script.google.com/macros/s/AKfycbyHZvRQT03xTD1tL-LM2YGXY72c-funS0wAkuiD4hZqD-foAAyuCQacImL_SbPlKFvH/exec";
+      const response = await axios.post(appsScriptUrl, { fileId: googleDriveId });
+
+      if (!response.data.success) {
+          throw new Error(response.data.message || "Error al obtener el archivo de Google Drive.");
+      }
+
+      const { fileData, fileName, mimeType } = response.data;
+
+      // Decodificar el archivo desde Base64
+      const fileBuffer = Buffer.from(fileData, "base64");
+      const newKey = `documents/generated/${Date.now()}-generated.docx`;
+      const uploadResult = await uploadFile(bucketName, newKey, fileBuffer);
+
+      console.log("Archivo subido con éxito a S3:", uploadResult.Location);
+      const documentUrl = uploadResult.Location;
+
+      // Eliminar el archivo anterior de S3
+      if (oldDocumentUrl) {
+        const oldKey = oldDocumentUrl.split(`fumiplagax.s3.us-east-2.amazonaws.com/`)[1];
+        if (!oldKey.startsWith('documents/')) {
+            console.error('La clave del archivo no es válida:', oldKey);
+            throw new Error('Clave del archivo no válida para eliminar.');
+        }
+        
+
+          if (oldKey) {
+              await deleteObject(bucketName, oldKey);
+              console.log(`Archivo anterior eliminado correctamente de S3: ${oldKey}`);
+          } else {
+              console.warn("No se pudo generar la clave del archivo anterior.");
+          }
+      }
+
+      // Actualizar la URL en la base de datos
+      const updateQuery = `
+          UPDATE generated_documents
+          SET document_url = $1
+          WHERE id = $2
+          RETURNING *;
+      `;
+      const updateValues = [documentUrl, generatedDocumentId];
+      const result = await pool.query(updateQuery, updateValues);
+
+      if (result.rowCount === 0) {
+          throw new Error("No se encontró el registro en la base de datos para actualizar.");
+      }
+
+      res.json({
+          success: true,
+          message: "El archivo fue procesado exitosamente.",
+          documentUrl,
+          updatedDocument: result.rows[0],
+      });
+  } catch (error) {
+      console.error("Error al procesar el archivo:", error.message);
+      res.status(500).json({
+          success: false,
+          message: "Error en el servidor.",
+          error: error.message,
+      });
+  }
+});
+
+const uploadDoc = multer();
+
+router.post("/replace-local-file", uploadDoc.single("file"), async (req, res) => {
+  const { generatedDocumentId } = req.body;
+  const file = req.file;
+
+  try {
+    // Validar parámetros
+    if (!generatedDocumentId || !file) {
+      return res.status(400).json({
+        success: false,
+        message: "El ID del documento y el archivo son obligatorios.",
+      });
+    }
+
+    // Obtener la URL actual del documento desde la base de datos
+    const fetchQuery = `
+      SELECT document_url FROM generated_documents WHERE id = $1;
+    `;
+    const fetchResult = await pool.query(fetchQuery, [generatedDocumentId]);
+
+    if (fetchResult.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No se encontró el documento en la base de datos.",
+      });
+    }
+
+    const oldDocumentUrl = fetchResult.rows[0].document_url;
+
+    // Subir el nuevo archivo a S3
+    const newKey = `documents/generated/${Date.now()}-generated.docx`;
+    const uploadResult = await uploadFile(bucketName, newKey, file.buffer);
+
+    console.log("Archivo subido con éxito a S3:", uploadResult.Location);
+    const documentUrl = uploadResult.Location;
+
+    // Eliminar el archivo anterior de S3
+    if (oldDocumentUrl) {
+      const oldKey = oldDocumentUrl.split(`fumiplagax.s3.us-east-2.amazonaws.com/`)[1];
+      if (oldKey && oldKey.startsWith("documents/")) {
+        await deleteObject(bucketName, oldKey);
+        console.log(`Archivo anterior eliminado correctamente de S3: ${oldKey}`);
+      } else {
+        console.warn("No se pudo generar la clave del archivo anterior.");
+      }
+    }
+
+    // Actualizar la URL en la base de datos
+    const updateQuery = `
+      UPDATE generated_documents
+      SET document_url = $1
+      WHERE id = $2
+      RETURNING *;
+    `;
+    const updateValues = [documentUrl, generatedDocumentId];
+    const result = await pool.query(updateQuery, updateValues);
+
+    if (result.rowCount === 0) {
+      throw new Error("No se encontró el registro en la base de datos para actualizar.");
+    }
+
+    res.json({
+      success: true,
+      message: "El archivo fue procesado exitosamente.",
+      documentUrl,
+      updatedDocument: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error al procesar el archivo:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor.",
+      error: error.message,
+    });
+  }
+});
+
+// Ruta relativa para los archivos temporales
+const tempDirectory = path.resolve(__dirname, "../../public/media/documents");
+
+router.post("/convert-to-pdf", async (req, res) => {
+  const { generatedDocumentId } = req.body;
+
+  console.log("Solicitud recibida para convertir a PDF. ID del documento:", generatedDocumentId);
+
+  try {
+    // Validar el parámetro
+    if (!generatedDocumentId) {
+      console.log("El parámetro 'generatedDocumentId' no fue proporcionado.");
+      return res.status(400).json({
+        success: false,
+        message: "El parámetro 'generatedDocumentId' es obligatorio.",
+      });
+    }
+
+    // Obtener la información del documento original
+    console.log("Obteniendo información del documento de la base de datos...");
+    const fetchQuery = `SELECT * FROM generated_documents WHERE id = $1;`;
+    const fetchResult = await pool.query(fetchQuery, [generatedDocumentId]);
+
+    if (fetchResult.rowCount === 0) {
+      console.log(`No se encontró el documento con ID ${generatedDocumentId} en la base de datos.`);
+      return res.status(404).json({
+        success: false,
+        message: "No se encontró el documento en la base de datos.",
+      });
+    }
+
+    const originalDocument = fetchResult.rows[0];
+    console.log("Documento encontrado:", originalDocument);
+
+    const documentUrl = originalDocument.document_url;
+    console.log("URL del documento obtenida:", documentUrl);
+
+    // Obtener la clave del documento desde la URL
+    const documentKey = decodeURIComponent(
+      documentUrl.split("fumiplagax.s3.us-east-2.amazonaws.com/")[1]
+    );
+    console.log("Clave del documento extraída de la URL:", documentKey);
+
+    // Generar URL prefirmada para descargar el archivo desde S3
+    console.log("Generando URL prefirmada...");
+    const signedUrl = await getSignedUrl(bucketName, documentKey);
+    console.log("URL prefirmada generada:", signedUrl);
+
+    // Descargar el archivo DOCX
+    console.log("Descargando archivo DOCX desde S3...");
+    const response = await axios.get(signedUrl, { responseType: "arraybuffer" });
+
+    // Definir la ruta temporal para el archivo DOCX
+    const docxPath = path.join(tempDirectory, `${Date.now()}-document.docx`);
+    console.log("Ruta temporal para el archivo DOCX:", docxPath);
+
+    // Guardar el archivo DOCX temporalmente
+    fs.writeFileSync(docxPath, response.data);
+    console.log("Archivo DOCX descargado y guardado temporalmente.");
+
+    // Convertir el archivo DOCX a PDF usando `convertToPDF`
+    console.log("Iniciando conversión a PDF...");
+    const pdfBuffer = await convertToPDF(fs.readFileSync(docxPath));
+    console.log("Archivo convertido a PDF exitosamente.");
+
+    // Subir el PDF a S3
+    const newKey = `documents/generated/${Date.now()}-generated.pdf`;
+    console.log("Subiendo archivo PDF a S3...");
+    const uploadResult = await uploadFile(bucketName, newKey, pdfBuffer);
+    console.log("Archivo PDF subido a S3 con éxito:", uploadResult.Location);
+
+    const pdfUrl = uploadResult.Location;
+
+    // Insertar un nuevo registro para el archivo PDF
+    console.log("Registrando el nuevo documento PDF en la base de datos...");
+    const insertQuery = `
+      INSERT INTO generated_documents (entity_type, entity_id, document_url, created_at, document_name, document_type)
+      VALUES ($1, $2, $3, NOW(), $4, $5)
+      RETURNING *;
+    `;
+    const insertResult = await pool.query(insertQuery, [
+      originalDocument.entity_type,
+      originalDocument.entity_id,
+      pdfUrl,
+      `PDF generado de ${originalDocument.document_name}`,
+      "pdf",
+    ]);
+
+    console.log("Nuevo documento creado en la base de datos:", insertResult.rows[0]);
+
+    // Responder al cliente
+    console.log("Enviando respuesta exitosa al cliente...");
+    res.json({
+      success: true,
+      message: "El archivo fue procesado y convertido a PDF exitosamente.",
+      newDocument: insertResult.rows[0],
+    });
+
+    // Limpiar archivo temporal
+    console.log("Eliminando archivo temporal...");
+    fs.unlinkSync(docxPath);
+  } catch (error) {
+    console.error("Error al procesar el archivo:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error al procesar el archivo.",
+      error: error.message,
+    });
+  }
+});
+
+
+// Ruta para obtener acciones relacionadas con inspecciones
+router.get('/actions-inspections', async (req, res) => {
+  try {
+
+    // Consultar en la tabla `document_actions` filtrando por `entity_type`
+    const result = await pool.query(
+      'SELECT * FROM document_actions WHERE entity_type = $1',
+      ['inspections']
+    );
+
+    const actions = result.rows;
+
+    res.json({
+      success: true,
+      actions: actions // Devuelve la lista de acciones
+    });
+  } catch (error) {
+    console.error("Error al obtener acciones:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      error: error.message
+    });
+  }
+});
+
 
 // Ruta para obtener todas las inspecciones
 router.get('/inspections', async (req, res) => {
@@ -2429,22 +2716,16 @@ router.get('/stations/:id', async (req, res) => {
   }
 });
 
+// Crear una nueva estación
 router.post('/stations', async (req, res) => {
-  const { description, category, type, control_method, client_id, qr_code, latitude, longitude, altitude } = req.body;
+  const { description, category, type, control_method, client_id, qr_code } = req.body;
 
   try {
-    // Construir el JSON para geo_position
-    const geoPosition = JSON.stringify({
-      latitude,
-      longitude,
-      altitude: altitude || null // Altitud opcional
-    });
-
     const query = `
-      INSERT INTO stations (description, category, type, control_method, client_id, geo_position)
-      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
+      INSERT INTO stations (description, category, type, control_method, client_id)
+      VALUES ($1, $2, $3, $4, $5) RETURNING *
     `;
-    const values = [description, category, type, control_method, client_id, geoPosition];
+    const values = [description, category, type, control_method, client_id];
     const result = await pool.query(query, values);
 
     const station = result.rows[0]; // Obtener la estación creada
@@ -2479,24 +2760,19 @@ router.post('/stations', async (req, res) => {
   }
 });
 
+
+// Actualizar una estación existente
 router.put('/stations/:id', async (req, res) => {
   const { id } = req.params;
-  const { description, category, type, control_method, client_id, latitude, longitude, altitude } = req.body;
+  const { description, category, type, control_method, client_id } = req.body;
 
   try {
-    // Construir el JSON para geo_position
-    const geoPosition = JSON.stringify({
-      latitude,
-      longitude,
-      altitude: altitude || null // Altitud opcional
-    });
-
     const query = `
       UPDATE stations
-      SET description = $1, category = $2, type = $3, control_method = $4, client_id = $5, geo_position = $6
-      WHERE id = $7 RETURNING *
+      SET description = $1, category = $2, type = $3, control_method = $4, client_id = $5
+      WHERE id = $6 RETURNING *
     `;
-    const values = [description, category, type, control_method, client_id, geoPosition, id];
+    const values = [description, category, type, control_method, client_id, id];
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
@@ -2602,7 +2878,7 @@ const uploadInspectionImages = multer({
 router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (req, res) => {
   try {
     const { inspectionId } = req.params;
-    const { generalObservations, findingsByType, productsByType, stationsFindings, signatures } = req.body;
+    const { generalObservations, findingsByType, productsByType, stationsFindings, signatures, userId} = req.body;
 
     console.log('Datos recibidos en el body:', {
       generalObservations,
@@ -2678,7 +2954,9 @@ const genericImagePaths = req.files.images
         signature: clientSignaturePath,
       },
       technician: {
-        name: parsedSignatures?.technician?.name || "Técnico",
+        id: parsedSignatures?.technician?.id || null,
+        name: parsedSignatures?.technician?.name || null,
+        role: parsedSignatures?.technician?.role || null,
         signature: techSignaturePath,
       },
     };
@@ -2697,35 +2975,10 @@ const genericImagePaths = req.files.images
     
         // Asociar imágenes a `stationsFindings`
         parsedStationsFindings.forEach((finding, index) => {
-          console.log(`Procesando hallazgo en estaciones (${index + 1}):`, finding);
-
-          // Buscar la imagen correspondiente al stationId
-          const matchingImage = stationImagePaths.find((path) => {
-            const fileName = path.split('/').pop(); // Obtener el nombre del archivo (e.g., "1737041536366-40.jpg")
-            const stationIdFromImage = fileName.split('-').pop().split('.')[0]; // Extraer el stationId después del último guion
-
-            console.log(`Comparando stationId: "${finding.stationId}" con stationId de imagen: "${stationIdFromImage}" para archivo: "${fileName}"`);
-
-            return stationIdFromImage === finding.stationId; // Comparar con el stationId del hallazgo
-          });
-
-          if (!matchingImage) {
-            console.warn(
-              `No se encontró una imagen coincidente para stationId "${finding.stationId}".`
-            );
-          } else {
-            console.log(
-              `Imagen encontrada para stationId "${finding.stationId}": ${matchingImage}`
-            );
+          if ((!finding.photo || finding.photo.startsWith('blob:')) && stationImagePaths[index]) {
+            finding.photo = stationImagePaths[index];
           }
-
-          // Asignar la imagen al hallazgo
-          if (!finding.photo || finding.photo.startsWith('blob:')) {
-            finding.photo = matchingImage || null; // Asignar la imagen o null si no hay coincidencia
-          }
-
-          console.log(`Estado final del hallazgo (${index + 1}):`, finding);
-        });
+        });    
 
     // Construir el objeto final de datos
     const findingsData = {
@@ -2740,8 +2993,10 @@ const genericImagePaths = req.files.images
           signature: clientSignaturePath, // URL pública de la firma del cliente
         },
         technician: {
-          name: parsedSignatures?.technician?.name || "Técnico",
-          signature: techSignaturePath, // URL pública de la firma del técnico
+          id: parsedSignatures?.technician?.id || null,
+          name: parsedSignatures?.technician?.name || null,
+          role: parsedSignatures?.technician?.role || null,
+          signature: techSignaturePath,
         },
       },
       genericImages: genericImagePaths, // URLs públicas de imágenes genéricas
@@ -2752,21 +3007,21 @@ const genericImagePaths = req.files.images
     console.log('findingsData preparado para guardar en la base de datos:', JSON.stringify(findingsData, null, 2));
 
     // Definir la consulta para actualizar la inspección
-const query = `
-UPDATE inspections
-SET 
-  observations = $1,
-  findings = $2,
-  exit_time = NOW()
-WHERE id = $3
-RETURNING *, NOW() AS exit_time;
-`;
+    const query = `
+    UPDATE inspections
+    SET 
+      observations = $1,
+      findings = $2,
+      exit_time = NOW()
+    WHERE id = $3
+    RETURNING *, NOW() AS exit_time;
+    `;
 
-// Valores para la consulta
-const values = [generalObservations, findingsData, inspectionId];
+    // Valores para la consulta
+    const values = [generalObservations, findingsData, inspectionId];
 
-// Ejecutar la consulta
-const result = await pool.query(query, values);
+    // Ejecutar la consulta
+    const result = await pool.query(query, values);
 
     if (result.rowCount === 0) {
       console.warn(`Inspección no encontrada para ID: ${inspectionId}`);
@@ -2785,30 +3040,57 @@ const result = await pool.query(query, values);
     
     console.log('Datos guardados en la base de datos:', updatedInspection);
     
-    // Obtener el responsable desde la tabla `services`
-    const responsibleQuery = `
-      SELECT u.name AS responsible_name 
-      FROM services s
-      JOIN users u ON s.responsible::text = u.id::text
-      WHERE s.id::text = $1;
-    `;
-    const responsibleResult = await pool.query(responsibleQuery, [String(updatedInspection.service_id)]);
-    
-    if (responsibleResult.rowCount === 0) {
-      console.warn(`Responsable no encontrado para el servicio asociado a la inspección ${inspectionId}`);
-      return res.status(404).json({ success: false, message: 'Responsable no encontrado' });
-    }
-    
-    const responsibleName = responsibleResult.rows[0].responsible_name;
-    console.log(`Responsable del servicio: ${responsibleName}`);
-    
-    // Crear mensaje de notificación condicional con fecha formateada
+    // Obtener el nombre del responsable, ya sea usuario o cliente
+    const getResponsibleName = async (userId) => {
+      // Consultar en la tabla de usuarios
+      const userQuery = `
+        SELECT name, lastname 
+        FROM users 
+        WHERE id::text = $1;
+      `;
+      const userResult = await pool.query(userQuery, [userId]);
+
+      if (userResult.rowCount > 0) {
+        const user = userResult.rows[0];
+        return { name: `${user.name} ${user.lastname}`, type: "user" };
+      }
+
+      // Consultar en la tabla de clientes
+      const clientQuery = `
+        SELECT name 
+        FROM clients 
+        WHERE id::text = $1;
+      `;
+      const clientResult = await pool.query(clientQuery, [userId]);
+
+      if (clientResult.rowCount > 0) {
+        const client = clientResult.rows[0];
+        return { name: client.name, type: "client" };
+      }
+
+      return null;
+    };
+
+    // Lógica principal
+    const responsibleNameResult = await getResponsibleName(userId);
     let notificationMessage;
+
+    if (!responsibleNameResult) {
+      console.warn(`No se encontró responsable con ID ${userId}`);
+      return res.status(404).json({ success: false, message: "Responsable no encontrado" });
+    }
+
+    const { name: responsibleName, type: responsibleType } = responsibleNameResult;
+
+    // Mensaje de notificación basado en firmas y tipo de responsable
     if (updatedSignatures.client?.signature && updatedSignatures.technician?.signature) {
       notificationMessage = `${responsibleName} ha finalizado el servicio con ID ${inspectionId} a las ${formattedExitTime}.`;
-    } else {
+    } else if (responsibleType === "user") {
       notificationMessage = `${responsibleName} ha actualizado la inspección con ID ${inspectionId} a las ${formattedExitTime}.`;
+    } else if (responsibleType === "client") {
+      notificationMessage = `El cliente ${responsibleName} ha realizado un hallazgo en la inspección ${inspectionId} a las ${formattedExitTime}.`;
     }
+
     console.log(`Mensaje de notificación: ${notificationMessage}`);    
 
     // Notificar a usuarios con roles permitidos
@@ -3665,7 +3947,7 @@ const transformEntity = (entity) => {
 
 // Ruta principal para almacenar configuración y código generado
 router.post('/save-configuration', async (req, res) => {
-  const { templateId, variables, tablas, entity, aiModels } = req.body;
+  const { templateId, variables, tablas, entity, aiModels, document_name, document_type } = req.body;
 
   try {
     console.log("=== Iniciando almacenamiento de configuración ===");
@@ -3686,6 +3968,8 @@ router.post('/save-configuration', async (req, res) => {
 
               // Definición de valores preconfigurados
               const entity = "${transformedEntity}";
+              const documentName = "${document_name}";
+              const documentType = "${document_type}";
               const templateId = "${templateId}";
               let variables = ${JSON.stringify(variables, null, 2)};
               let tablas = ${JSON.stringify(tablas, null, 2)};
@@ -5105,78 +5389,99 @@ router.post('/save-configuration', async (req, res) => {
                             
 
               const extractCellWidthsAndSpans = (row) => {
-                console.log("=== Extrayendo y reestructurando celdas (combinación hacia la izquierda) ===");
-              
+                console.log("=== Extrayendo y reestructurando celdas ===");
+
                 const elements = row.elements;
-                const restructuredCells = [];
                 const cellsToRemove = []; // Lista de índices de celdas que serán eliminadas
-              
+
                 // Fase 1: Detectar todas las celdas y su estado
                 console.log("=== Fase 1: Detección inicial de celdas ===");
                 const cellDetails = elements.map((cell, index) => {
-                  // Log para mostrar el elemento completo
-                  console.log(\`Evaluando elemento en índice \${index}:\`, JSON.stringify(cell, null, 2));
-              
                   const attributes = extractCellAttributes(cell); // Usa la función que extrae atributos de la celda
                   const isCell = cell?.name === 'w:tc'; // Confirmar si el elemento es una celda
                   if (!isCell) {
                     console.log(\`Elemento en índice \${index} no es una celda válida. Se ignora.\`);
                     return null;
                   }
-              
+
                   const cellDetail = {
                     index: index + 1,
                     ...attributes,
                     combinedWith: [], // Inicialmente vacío
                   };
-              
+
                   console.log(
                     \`Celda \${cellDetail.index}: Ancho = \${cellDetail.width}, GridSpan = \${cellDetail.gridSpan}, Atributos = \`,
                     cellDetail
                   );
                   return cellDetail;
                 }).filter(Boolean); // Filtrar elementos nulos o no válidos
-              
-                // Fase 2: Detectar combinaciones hacia la izquierda
-                console.log("=== Fase 2: Detectar combinaciones hacia la izquierda ===");
+
+                // Fase 2: Detectar combinaciones
+                console.log("=== Fase 2: Detectar combinaciones ===");
                 cellDetails.forEach((cell, idx) => {
                   if (cell.gridSpan > 1) {
                     console.log(\`Celda \${cell.index}: Detectada combinación con GridSpan = \${cell.gridSpan}\`);
                     let combinedWidth = cell.width;
-              
-                    // Revisar celdas anteriores para la combinación
+
+                    // Verificar combinación hacia la derecha
+                    let isRightMerge = true;
                     for (let i = 1; i < cell.gridSpan; i++) {
-                      const prevCellIndex = idx - i;
-                      if (prevCellIndex >= 0) {
-                        const prevCell = cellDetails[prevCellIndex];
-                        combinedWidth += prevCell.width;
-                        cell.combinedWith.push(prevCell.index);
-                        cellsToRemove.push(prevCell.index);
+                      const nextCellIndex = idx + i;
+                      if (
+                        nextCellIndex >= cellDetails.length || // Si excede el límite del array
+                        cellDetails[nextCellIndex]?.gridSpan !== 1 // Si la celda no es "vacía" (sin gridSpan adicional)
+                      ) {
+                        isRightMerge = false;
+                        break;
                       }
                     }
-              
+
+                    if (isRightMerge) {
+                      console.log(\`Celda \${cell.index}: Confirmada combinación hacia la derecha.\`);
+                      // Sumar los anchos de las celdas combinadas hacia la derecha
+                      for (let i = 1; i < cell.gridSpan; i++) {
+                        const nextCellIndex = idx + i;
+                        combinedWidth += cellDetails[nextCellIndex].width;
+                        cell.combinedWith.push(cellDetails[nextCellIndex].index);
+                        cellsToRemove.push(cellDetails[nextCellIndex].index);
+                      }
+                    } else {
+                      console.log(\`Celda \${cell.index}: No es posible combinar hacia la derecha. Verificando hacia la izquierda.\`);
+                      // Verificar combinación hacia la izquierda
+                      for (let i = 1; i < cell.gridSpan; i++) {
+                        const prevCellIndex = idx - i;
+                        if (prevCellIndex >= 0) {
+                          const prevCell = cellDetails[prevCellIndex];
+                          combinedWidth += prevCell.width;
+                          cell.combinedWith.push(prevCell.index);
+                          cellsToRemove.push(prevCell.index);
+                        }
+                      }
+                    }
+
                     cell.width = combinedWidth;
                     console.log(
                       \`Celda \${cell.index}: Combinada con \${cell.combinedWith.join(", ")}. Ancho combinado = \${cell.width}\`
                     );
                   }
                 });
-              
+
                 // Fase 3: Registrar celdas a eliminar
                 console.log("=== Fase 3: Celdas a eliminar ===");
                 console.log(\`Celdas que serán eliminadas: \${[...new Set(cellsToRemove)].join(", ")}\`);
-              
+
                 // Fase 4: Filtrar celdas restantes
                 console.log("=== Fase 4: Filtrar celdas restantes ===");
                 const remainingCells = cellDetails.filter(
                   (cell) => !cellsToRemove.includes(cell.index)
                 );
-              
+
                 console.log("Celdas restantes:");
                 remainingCells.forEach((cell) =>
                   console.log(\`Celda \${cell.index}: Ancho = \${cell.width}, GridSpan = \${cell.gridSpan}\`)
                 );
-              
+
                 // Fase 5: Reordenar índices de celdas
                 console.log("=== Fase 5: Reordenar índices ===");
                 const reorderedCells = remainingCells.map((cell, newIndex) => {
@@ -5186,12 +5491,12 @@ router.post('/save-configuration', async (req, res) => {
                     index: newIndex + 1,
                   };
                 });
-              
+
                 console.log("Celdas reestructuradas finales:");
                 reorderedCells.forEach((cell) =>
                   console.log(\`Celda \${cell.index}: Ancho = \${cell.width}, GridSpan = \${cell.gridSpan}\`)
                 );
-              
+
                 // Retornar las celdas reestructuradas
                 return reorderedCells.map((cell) => ({
                   ...cell,
@@ -5745,7 +6050,47 @@ router.post('/save-configuration', async (req, res) => {
               const uploadResult = await uploadFile(bucketName, newKey, updatedBuffer);
 
               console.log("Documento generado con éxito:", uploadResult.Location);
-              return uploadResult.Location;
+              const documentUrl = uploadResult.Location;
+
+              let generatedDocumentId = '';
+
+              // Inserción en la tabla generated_documents
+              try {
+                  const query = \`
+                      INSERT INTO generated_documents (entity_type, entity_id, document_url, document_name, document_type)
+                      VALUES ($1, $2, $3, $4, $5)
+                      RETURNING id;
+                  \`;
+                  const values = [entity, idEntity, documentUrl, documentName, 'doc'];
+                  const result = await pool.query(query, values);
+
+                  generatedDocumentId = result.rows[0].id;
+
+                  console.log("Registro insertado correctamente en la tabla generated_documents.");
+              } catch (error) {
+                  console.error("Error al insertar en la tabla generated_documents:", error);
+              }
+
+              // Verificar si el documento es de tipo PDF
+              if (documentType === 'pdf') {
+                  console.log("Iniciando conversión a PDF...");
+                  try {
+                      const response = await axios.post(
+                          \`\${process.env.BACKEND_URL}/api/convert-to-pdf\`,
+                          { generatedDocumentId }
+                      );
+
+                      if (response.data.success) {
+                          console.log("El documento fue convertido a PDF exitosamente:", response.data.newDocument);
+                      } else {
+                          console.error("Error durante la conversión a PDF:", response.data.message);
+                      }
+                  } catch (convertError) {
+                      console.error("Error al llamar a la API de conversión a PDF:", convertError.message);
+                  }
+              }
+
+              return documentUrl;
             };
           `;
 
@@ -5756,6 +6101,7 @@ router.post('/save-configuration', async (req, res) => {
     const insertQuery = `
       INSERT INTO document_configuration (template_id, configuration, generated_code, created_at, entity)
       VALUES ($1, $2, $3, NOW(), $4)
+      RETURNING id
     `;
 
     const configuration = {
@@ -5764,11 +6110,29 @@ router.post('/save-configuration', async (req, res) => {
       tablas,
     };
 
-    await pool.query(insertQuery, [
+    const result = await pool.query(insertQuery, [
       templateId,
       JSON.stringify(configuration),
       generatedCode,
       transformedEntity,
+    ]);
+
+    const configurationId = result.rows[0].id;
+
+    // Registrar la acción en la tabla document_actions
+    const insertActionQuery = `
+      INSERT INTO document_actions (configuration_id, entity_type, action_type, action_name, created_at)
+      VALUES ($1, $2, $3, $4, NOW())
+    `;
+
+    const actionType = `generate_${document_type}`;
+    const actionName = `Generar ${document_name}`;
+
+    await pool.query(insertActionQuery, [
+      configurationId,
+      transformedEntity,
+      actionType,
+      actionName,
     ]);
 
     console.log("Configuración y código almacenados correctamente en la base de datos.");
@@ -5912,6 +6276,8 @@ router.post('/create-document-service', async (req, res) => {
 // Ruta para ejecutar código dinámico almacenado
 router.post('/create-document-inspeccion', async (req, res) => {
   const { idEntity, id } = req.body; // Recibir ID de la entidad e ID de configuración
+
+  console.log("Identificador único de solicitud:", req.body.uniqueId);
   try {
     console.log("=== Iniciando ejecución de configuración almacenada ===");
 
@@ -5961,16 +6327,34 @@ router.post('/create-document-inspeccion', async (req, res) => {
         return await createDocument_inspections(idEntity);
       })();
     `);
-
+    
     const context = vm.createContext(sandbox);
-    script.runInContext(context);
+    
+    // Ejecutar el script una sola vez
+    const documentUrl = await script.runInContext(context);
 
-    console.log("Código ejecutado exitosamente.");
+    console.log("Código ejecutado exitosamente. URL del documento:", documentUrl);
 
-    res.status(200).json({ message: "Código ejecutado correctamente.", executed: true });
+    // Prefirmar el documento usando la ruta /PrefirmarArchivos
+    const response = await axios.post(`${process.env.BACKEND_URL}/api/PrefirmarArchivos`, { url: documentUrl });
+    const signedUrl = response.data.signedUrl;
+
+    console.log("URL prefirmada obtenida:", signedUrl);
+
+    res.status(200).json({ 
+      message: "Código ejecutado correctamente.", 
+      executed: true, 
+      success: true,
+      documentUrl,
+      signedUrl
+    });
   } catch (error) {
     console.error("Error al ejecutar el código generado:", error.message);
-    res.status(500).json({ message: "Error interno del servidor", error: error.message });
+    res.status(500).json({ 
+      message: "Error interno del servidor", 
+      error: error.message, 
+      success: false 
+    });
   }
 });
 
