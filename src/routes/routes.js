@@ -528,6 +528,7 @@ router.post('/register', uploadImage, compressImage, async (req, res) => {
 
 // Nueva ruta para obtener todos los usuarios registrados
 router.get('/users', async (req, res) => {
+  const { rol } = req.query;
   try {
     const result = await pool.query('SELECT * FROM users');
     const users = result.rows;
@@ -558,7 +559,17 @@ router.get('/users', async (req, res) => {
       }
     }
 
-    res.json(users);
+    if (rol) {
+      // Convertir los roles de query string en un array
+      const rolesArray = rol.split(','); // Ejemplo: "Operario,Supervisor" => ["Operario", "Supervisor"]
+
+      // Filtrar usuarios cuyos roles coincidan con cualquiera de los roles en el array
+      const filteredUsers = users.filter(user => rolesArray.includes(user.rol));
+      res.json(filteredUsers);
+    } else {
+      // Devolver todos los usuarios si no se especifica un rol
+      res.json(users);
+    }
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
     res.status(500).json({ message: 'Error al obtener usuarios' });
@@ -1036,6 +1047,10 @@ router.post('/services', async (req, res) => {
     if (parsedCompanion.length > 0) {
       for (let companionId of parsedCompanion) {
         try {
+          const notificationQuery = `
+            INSERT INTO notifications (user_id, notification, state)
+            VALUES ($1, $2, $3) RETURNING *
+          `;
           const companionNotificationValues = [companionId, notificationMessage, 'pending'];
           const companionNotificationResult = await pool.query(notificationQuery, companionNotificationValues);
 
