@@ -15,8 +15,8 @@ const app = express();
 
 // Leer los certificados SSL
 const sslOptions = {
-  key: fs.readFileSync('/etc/letsencrypt/live/fumiplagax.axiomarobotics.com/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/fumiplagax.axiomarobotics.com/fullchain.pem')
+  key: fs.readFileSync('/etc/letsencrypt/live/services.impecol.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/services.impecol.com/fullchain.pem')
 };
 
 // Crear servidor HTTPS
