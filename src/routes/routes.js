@@ -2263,9 +2263,73 @@ router.delete('/inspections/:id', async (req, res) => {
 });
 
 // Ruta para obtener todos los registros
-router.get('/service-schedule', async (req, res) => {
+router.get('/all-service-schedule', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM service_schedule');
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener los registros:", error);
+    res.status(500).json({ success: false, message: "Error en el servidor", error: error.message });
+  }
+});
+
+// Ruta para obtener los eventos de los servicios específicos del usuario
+router.get('/service-service-schedule', async (req, res) => {
+  try {
+    const { serviceIds } = req.query; // Se reciben los IDs de los servicios como una lista
+
+    if (!serviceIds || serviceIds.length === 0) {
+      return res.status(400).json({ success: false, message: "No se proporcionaron servicios." });
+    }
+
+    // Convertir el array de IDs en una lista válida para la consulta SQL
+    const serviceIdList = serviceIds.split(',').map(id => id.trim()); // Mantener los IDs como strings
+
+    if (serviceIdList.length === 0) {
+      return res.status(400).json({ success: false, message: "IDs de servicio inválidos." });
+    }
+
+    // Consulta para obtener solo los eventos de los servicios del usuario
+    const result = await pool.query(
+      `SELECT * FROM service_schedule WHERE service_id = ANY($1)`,
+      [serviceIdList]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener los registros:", error);
+    res.status(500).json({ success: false, message: "Error en el servidor", error: error.message });
+  }
+});
+
+
+// Ruta para obtener los registros filtrados por mes y año
+router.get('/service-schedule', async (req, res) => {
+  try {
+    const { month } = req.query; // Recibe mesComp en formato MM/YYYY
+
+    console.log('Consultando eventos para: ', month)
+
+    if (!month) {
+      return res.status(400).json({ success: false, message: "El parámetro 'month' es requerido en el formato MM/YYYY." });
+    }
+
+    // Extrae el mes y el año del parámetro mesComp
+    const [mm, yyyy] = month.split('/');
+
+    if (!mm || !yyyy) {
+      return res.status(400).json({ success: false, message: "Formato inválido. Usa MM/YYYY." });
+    }
+
+    // Consulta SQL para filtrar por mes y año
+    const query = `
+      SELECT * FROM service_schedule 
+      WHERE EXTRACT(MONTH FROM date) = $1 
+      AND EXTRACT(YEAR FROM date) = $2
+    `;
+
+    const result = await pool.query(query, [mm, yyyy]);
+    
     res.json(result.rows);
   } catch (error) {
     console.error("Error al obtener los registros:", error);
@@ -2893,7 +2957,7 @@ const uploadInspectionImages = multer({
 router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (req, res) => {
   try {
     const { inspectionId } = req.params;
-    const { generalObservations, findingsByType, productsByType, stationsFindings, signatures, userId} = req.body;
+    const { generalObservations, findingsByType, productsByType, stationsFindings, signatures, userId, exitTime} = req.body;
 
     console.log('Datos recibidos en el body:', {
       generalObservations,
@@ -3063,13 +3127,13 @@ const genericImagePaths = req.files.images
     SET 
       observations = $1,
       findings = $2,
-      exit_time = NOW()
-    WHERE id = $3
+      exit_time = $3
+    WHERE id = $4
     RETURNING *, NOW() AS exit_time;
     `;
 
     // Valores para la consulta
-    const values = [generalObservations, findingsData, inspectionId];
+    const values = [generalObservations, findingsData, exitTime, inspectionId];
 
     // Ejecutar la consulta
     const result = await pool.query(query, values);
@@ -3080,14 +3144,6 @@ const genericImagePaths = req.files.images
     }
 
     const updatedInspection = result.rows[0];
-    const exitTime = updatedInspection.exit_time;
-    
-    // Formatear exitTime para que sea más amigable
-    const formattedExitTime = new Intl.DateTimeFormat('es-CO', {
-      dateStyle: 'full',
-      timeStyle: 'short',
-      timeZone: 'America/Bogota',
-    }).format(new Date(exitTime));
     
     console.log('Datos guardados en la base de datos:', updatedInspection);
     
@@ -3135,11 +3191,11 @@ const genericImagePaths = req.files.images
 
     // Mensaje de notificación basado en firmas y tipo de responsable
     if (updatedSignatures.client?.signature && updatedSignatures.technician?.signature) {
-      notificationMessage = `${responsibleName} ha finalizado el servicio con ID ${inspectionId} a las ${formattedExitTime}.`;
+      notificationMessage = `${responsibleName} ha finalizado el servicio con ID ${inspectionId} a las ${exitTime}.`;
     } else if (responsibleType === "user") {
-      notificationMessage = `${responsibleName} ha actualizado la inspección con ID ${inspectionId} a las ${formattedExitTime}.`;
+      notificationMessage = `${responsibleName} ha actualizado la inspección con ID ${inspectionId} a las ${exitTime}.`;
     } else if (responsibleType === "client") {
-      notificationMessage = `El cliente ${responsibleName} ha realizado un hallazgo en la inspección ${inspectionId} a las ${formattedExitTime}.`;
+      notificationMessage = `El cliente ${responsibleName} ha realizado un hallazgo en la inspección ${inspectionId} a las ${exitTime}.`;
     }
 
     console.log(`Mensaje de notificación: ${notificationMessage}`);    
