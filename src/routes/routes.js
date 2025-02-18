@@ -233,12 +233,16 @@ const compressImage = async (req, res, next) => {
 };
 
 router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
-  const { name, lastname, email, phone, userId, color } = req.body;
+  const { name, lastname, email, phone, userId, color, role, password } = req.body;
+  const adminId = req.headers["admin-id"];
 
   let imageUrl = null;
-
+  let hashedPassword = null;
+  if (password && password.trim() !== '') {
+      hashedPassword = await bcrypt.hash(password, 10);
+  }
+  
   try {
-    // Subir nueva imagen y eliminar la anterior si se proporciona
     if (req.file) {
       const result = await pool.query('SELECT image FROM users WHERE id = $1', [userId]);
       const previousImage = result.rows[0]?.image;
@@ -246,17 +250,20 @@ router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
       if (previousImage && previousImage.includes('.amazonaws.com/')) {
         const bucketName = 'fumiplagax';
         const previousKey = previousImage.split('.amazonaws.com/')[1];
-        await deleteObject(bucketName, previousKey); // Eliminar la imagen anterior
+        await deleteObject(bucketName, previousKey);
         console.log(`Imagen anterior eliminada: ${previousKey}`);
       }
+
+      
+
+      
 
       const bucketName = 'fumiplagax';
       const key = `profile_pictures/${Date.now()}-${req.file.originalname}`;
       const uploadResult = await uploadFile(bucketName, key, req.file.buffer);
-      imageUrl = uploadResult.Location; // URL pública generada por S3
+      imageUrl = uploadResult.Location;
     }
 
-    // Construir partes dinámicas para la consulta
     const fields = [];
     const values = [];
     let index = 1;
@@ -265,22 +272,30 @@ router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
     if (lastname) fields.push(`lastname = $${index++}`) && values.push(lastname);
     if (email) fields.push(`email = $${index++}`) && values.push(email);
     if (phone) fields.push(`phone = $${index++}`) && values.push(phone);
-    if (color) fields.push(`color = $${index++}`) && values.push(color);
+    if (color) {
+      const hexColor = rgbToHex(color); // ✅ Convierte a HEX si es necesario
+      fields.push(`color = $${index++}`);
+      values.push(hexColor);
+    }
+    if (role) fields.push(`rol = $${index++}`) && values.push(role);
+    if (hashedPassword) {
+      fields.push(`password = $${index++}`);
+      values.push(hashedPassword);
+  }  
     if (imageUrl) fields.push(`image = $${index++}`) && values.push(imageUrl);
     values.push(userId);
 
-    if (fields.length === 0) {
+    if (fields.length > 0) {
+      const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${index}`;
+      await pool.query(query, values);
+  } else {
       return res.status(400).json({ message: 'No se enviaron datos para actualizar' });
-    }
+  }  
 
-    const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${index}`;
-    await pool.query(query, values);
-
-    // Generar enlace prefirmado para la nueva imagen
     if (imageUrl) {
       const bucketName = 'fumiplagax';
       const key = imageUrl.split('.amazonaws.com/')[1];
-      imageUrl = await getSignedUrl(bucketName, key); // Generar enlace prefirmado
+      imageUrl = await getSignedUrl(bucketName, key);
     }
 
     res.json({ message: 'Perfil actualizado exitosamente', profilePicURL: imageUrl });
