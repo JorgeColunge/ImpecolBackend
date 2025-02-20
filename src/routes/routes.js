@@ -232,6 +232,27 @@ const compressImage = async (req, res, next) => {
   }
 };
 
+function rgbToHex(rgb) {
+  if (!rgb) return "#ffffff"; // Si el valor es nulo, retornar blanco por defecto
+
+  // Normaliza el valor eliminando espacios y convirtiendo a minúsculas
+  const normalizedRgb = rgb.trim().toLowerCase();
+
+  // Si ya es HEX, devolverlo tal cual
+  if (normalizedRgb.startsWith("#")) return normalizedRgb;
+
+  // Extraer valores RGB usando regex
+  const result = normalizedRgb.match(/\d+/g);
+  if (!result || result.length < 3) return "#ffffff"; // Si hay error, devolver blanco
+
+  // Convertir cada componente a HEX
+  const r = parseInt(result[0]).toString(16).padStart(2, "0");
+  const g = parseInt(result[1]).toString(16).padStart(2, "0");
+  const b = parseInt(result[2]).toString(16).padStart(2, "0");
+
+  return `#${r}${g}${b}`;
+}
+
 router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
   const { name, lastname, email, phone, userId, color, role, password } = req.body;
   const adminId = req.headers["admin-id"];
@@ -2148,6 +2169,22 @@ router.get('/inspections/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: "Inspección no encontrada" });
     }
     res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error al obtener inspección:", error);
+    res.status(500).json({ success: false, message: "Error en el servidor", error: error.message });
+  }
+});
+
+router.get('/inspections_service/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log("Consultando inspecciones de servicio ", id);
+
+  try {
+    const result = await pool.query('SELECT * FROM inspections WHERE service_id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Inspección no encontrada" });
+    }
+    res.json(result.rows); // ✅ SOLUCIÓN: Enviar un array de inspecciones
   } catch (error) {
     console.error("Error al obtener inspección:", error);
     res.status(500).json({ success: false, message: "Error en el servidor", error: error.message });
