@@ -1001,6 +1001,7 @@ router.post('/services', async (req, res) => {
     created_by,
     responsible,
     companion,
+    duration,
   } = req.body;
 
   try {
@@ -1017,12 +1018,13 @@ router.post('/services', async (req, res) => {
       created_by,
       responsible: responsible || null,
       companion: companion || null,
+      duration: duration || null,
     };
 
     // Insertar el servicio en la tabla
     const query = `
-      INSERT INTO services (service_type, description, pest_to_control, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *
+      INSERT INTO services (service_type, description, pest_to_control, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion, duration)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *
     `;
     const values = Object.values(formattedData);
     const result = await pool.query(query, values);
@@ -1146,16 +1148,18 @@ router.get('/services/:id', async (req, res) => {
 // Editar servicio
 router.put('/services/:id', async (req, res) => {
   const { id } = req.params;
-  const { service_type, description, pest_to_control, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion } = req.body;
+  const { service_type, description, pest_to_control, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion, duration } = req.body;
+
+  console.log('Duración', duration);
 
   try {
     const query = `
       UPDATE services
       SET service_type = $1, description = $2, pest_to_control = $3, intervention_areas = $4, category = $5,
-          quantity_per_month = $6, client_id = $7, value = $8, created_by = $9, responsible = $10, companion = $11
-      WHERE id = $12 RETURNING *
+          quantity_per_month = $6, client_id = $7, value = $8, created_by = $9, responsible = $10, companion = $11, duration = $12
+      WHERE id = $13 RETURNING *
     `;
-    const values = [service_type, description, pest_to_control, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion, id];
+    const values = [service_type, description, pest_to_control, intervention_areas, category, quantity_per_month, client_id, value, created_by, responsible, companion, duration, id];
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
