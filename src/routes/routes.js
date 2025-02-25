@@ -269,7 +269,7 @@ router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
       const previousImage = result.rows[0]?.image;
 
       if (previousImage && previousImage.includes('.amazonaws.com/')) {
-        const bucketName = 'fumiplagax';
+        const bucketName = 'impecol';
         const previousKey = previousImage.split('.amazonaws.com/')[1];
         await deleteObject(bucketName, previousKey);
         console.log(`Imagen anterior eliminada: ${previousKey}`);
@@ -279,7 +279,7 @@ router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
 
       
 
-      const bucketName = 'fumiplagax';
+      const bucketName = 'impecol';
       const key = `profile_pictures/${Date.now()}-${req.file.originalname}`;
       const uploadResult = await uploadFile(bucketName, key, req.file.buffer);
       imageUrl = uploadResult.Location;
@@ -314,7 +314,7 @@ router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
   }  
 
     if (imageUrl) {
-      const bucketName = 'fumiplagax';
+      const bucketName = 'impecol';
       const key = imageUrl.split('.amazonaws.com/')[1];
       imageUrl = await getSignedUrl(bucketName, key);
     }
@@ -339,13 +339,13 @@ router.post('/updateProfileClient', uploadImage, compressImage, async (req, res)
       const previousImage = result.rows[0]?.image;
 
       if (previousImage && previousImage.includes('.amazonaws.com/')) {
-        const bucketName = 'fumiplagax';
+        const bucketName = 'impecol';
         const previousKey = previousImage.split('.amazonaws.com/')[1];
         await deleteObject(bucketName, previousKey); // Eliminar la imagen anterior
         console.log(`Imagen anterior eliminada: ${previousKey}`);
       }
 
-      const bucketName = 'fumiplagax';
+      const bucketName = 'impecol';
       const key = `profile_pictures/${Date.now()}-${req.file.originalname}`;
       const uploadResult = await uploadFile(bucketName, key, req.file.buffer);
       imageUrl = uploadResult.Location; // URL pública generada por S3
@@ -371,7 +371,7 @@ router.post('/updateProfileClient', uploadImage, compressImage, async (req, res)
 
     // Generar enlace prefirmado para la nueva imagen
     if (imageUrl) {
-      const bucketName = 'fumiplagax';
+      const bucketName = 'impecol';
       const key = imageUrl.split('.amazonaws.com/')[1];
       imageUrl = await getSignedUrl(bucketName, key); // Generar enlace prefirmado
     }
@@ -397,7 +397,7 @@ router.post('/upload', uploadImage, compressImage, async (req, res) => {
 
   try {
     // Subir archivo a S3
-    const bucketName = 'fumiplagax'; // Cambia esto por el nombre de tu bucket
+    const bucketName = 'impecol'; // Cambia esto por el nombre de tu bucket
     const key = `profile_pictures/${Date.now()}-${req.file.originalname}`; // Ruta única en S3
     const result = await uploadFile(bucketName, key, req.file.buffer);
 
@@ -503,7 +503,7 @@ router.post('/register', uploadImage, compressImage, async (req, res) => {
     // Subir la imagen al bucket S3 si se proporciona
     if (req.file) {
       try {
-        const bucketName = 'fumiplagax';
+        const bucketName = 'impecol';
         const key = `profile_pictures/${Date.now()}-${req.file.originalname}`;
         const uploadResult = await uploadFile(bucketName, key, req.file.buffer);
         imageUrl = uploadResult.Location; // URL pública generada por S3
@@ -534,7 +534,7 @@ router.post('/register', uploadImage, compressImage, async (req, res) => {
     let preSignedImageUrl = null;
     if (imageUrl) {
       try {
-        const bucketName = 'fumiplagax';
+        const bucketName = 'impecol';
         const key = imageUrl.includes('.amazonaws.com/')
           ? imageUrl.split('.amazonaws.com/')[1]
           : null;
@@ -573,7 +573,7 @@ router.get('/users', async (req, res) => {
     for (let user of users) {
       if (user.image) {
         try {
-          const bucketName = 'fumiplagax';
+          const bucketName = 'impecol';
 
           // Validar si la URL contiene el key esperado
           const key = user.image.includes('.amazonaws.com/')
@@ -640,7 +640,7 @@ router.get('/users/:id', async (req, res) => {
     // Generar URL prefirmada si el usuario tiene una imagen válida
     if (user.image) {
       try {
-        const bucketName = 'fumiplagax';
+        const bucketName = 'impecol';
 
         // Validar si la URL contiene el key esperado
         const key = user.image.includes('.amazonaws.com/')
@@ -780,7 +780,7 @@ router.get('/clients', async (req, res) => {
       console.log("prefirmando")
       if (client.photo) {
         try {
-          const bucketName = 'fumiplagax';
+          const bucketName = 'impecol';
 
           // Validar si la URL contiene el key esperado
           const key = client.photo.includes('.amazonaws.com/')
@@ -827,7 +827,7 @@ router.get('/clients/:id', async (req, res) => {
     // Generar URL prefirmada si el usuario tiene una imagen válida
     if (client.photo) {
       try {
-        const bucketName = 'fumiplagax';
+        const bucketName = 'impecol';
 
         // Validar si la URL contiene el key esperado
         const key = client.photo.includes('.amazonaws.com/')
@@ -1886,7 +1886,7 @@ router.post("/replace-google-drive-url", async (req, res) => {
 
       // Eliminar el archivo anterior de S3
       if (oldDocumentUrl) {
-        const oldKey = oldDocumentUrl.split(`fumiplagax.s3.us-east-2.amazonaws.com/`)[1];
+        const oldKey = oldDocumentUrl.split(`impecol.s3.us-east-2.amazonaws.com/`)[1];
         if (!oldKey.startsWith('documents/')) {
             console.error('La clave del archivo no es válida:', oldKey);
             throw new Error('Clave del archivo no válida para eliminar.');
@@ -1970,7 +1970,7 @@ router.post("/replace-local-file", uploadDoc.single("file"), async (req, res) =>
 
     // Eliminar el archivo anterior de S3
     if (oldDocumentUrl) {
-      const oldKey = oldDocumentUrl.split(`fumiplagax.s3.us-east-2.amazonaws.com/`)[1];
+      const oldKey = oldDocumentUrl.split(`impecol.s3.us-east-2.amazonaws.com/`)[1];
       if (oldKey && oldKey.startsWith("documents/")) {
         await deleteObject(bucketName, oldKey);
         console.log(`Archivo anterior eliminado correctamente de S3: ${oldKey}`);
@@ -2048,7 +2048,7 @@ router.post("/convert-to-pdf", async (req, res) => {
 
     // Obtener la clave del documento desde la URL
     const documentKey = decodeURIComponent(
-      documentUrl.split("fumiplagax.s3.us-east-2.amazonaws.com/")[1]
+      documentUrl.split("impecol.s3.us-east-2.amazonaws.com/")[1]
     );
     console.log("Clave del documento extraída de la URL:", documentKey);
 
@@ -2785,7 +2785,7 @@ router.get('/stations', async (req, res) => {
     // Generar URLs prefirmadas solo si qr_code es válido
     for (let station of stations) {
       if (station.qr_code && station.qr_code.includes('.amazonaws.com/')) {
-        const bucketName = 'fumiplagax';
+        const bucketName = 'impecol';
         const key = station.qr_code.split('.amazonaws.com/')[1];
 
         if (key) {
@@ -2823,7 +2823,7 @@ router.get('/stations/:id', async (req, res) => {
 
     // Generar URL prefirmada solo si qr_code es válido
     if (station.qr_code && station.qr_code.includes('.amazonaws.com/')) {
-      const bucketName = 'fumiplagax';
+      const bucketName = 'impecol';
       const key = station.qr_code.split('.amazonaws.com/')[1];
 
       if (key) {
@@ -2867,7 +2867,7 @@ router.post('/stations', async (req, res) => {
     const qrBuffer = await QRCode.toBuffer(qrData, { width: 300 });
 
     // Subir el archivo QR a S3
-    const bucketName = 'fumiplagax'; // Tu bucket S3
+    const bucketName = 'impecol'; // Tu bucket S3
     const key = `stations/${Date.now()}-${uuidv4()}.png`;
 
     const uploadResult = await uploadFile(bucketName, key, qrBuffer);
@@ -2912,7 +2912,7 @@ router.put('/stations/:id', async (req, res) => {
 
     const station = result.rows[0];
     if (station.qr_code) {
-      const bucketName = 'fumiplagax';
+      const bucketName = 'impecol';
       const key = station.qr_code.split('.amazonaws.com/')[1];
       station.qr_code = await getSignedUrl(bucketName, key);
     }
@@ -2958,7 +2958,7 @@ router.get('/stations/client/:client_id', async (req, res) => {
     // Generar URLs prefirmadas solo si hay una clave válida en qr_code
     for (let station of stations) {
       if (station.qr_code && station.qr_code.includes('.amazonaws.com/')) {
-        const bucketName = 'fumiplagax';
+        const bucketName = 'impecol';
         const keyParts = station.qr_code.split('.amazonaws.com/'); // Extraer clave
         const key = keyParts[1] || null;
 
@@ -3031,7 +3031,7 @@ router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (re
       console.log('stationsFindings parseado:', JSON.stringify(parsedStationsFindings, null, 2));  
 
     // Procesar imágenes recibidas (igual que antes)
-    const bucketName = 'fumiplagax'; // Define el bucket
+    const bucketName = 'impecol'; // Define el bucket
     // Procesar imágenes recibidas y subir a S3
     const uploadImagesToS3 = async (files, folder) => {
       if (!files) return [];
@@ -3649,7 +3649,7 @@ router.post('/maps', uploadImage, compressImage, async (req, res) => {
 
   try {
     // Subir la imagen a S3
-    const bucketName = 'fumiplagax';
+    const bucketName = 'impecol';
     const key = `client_maps/${Date.now()}-${req.file.originalname}`; // Clave única para S3
     const s3Url = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`; // Construir URL de S3
 
@@ -3697,7 +3697,7 @@ router.get('/maps/:client_id', async (req, res) => {
           map.image &&
           !map.image.includes('X-Amz-Algorithm') // Verifica si la URL ya está prefirmada
         ) {
-          const bucketName = 'fumiplagax';
+          const bucketName = 'impecol';
           const key = map.image.split('.amazonaws.com/')[1];
 
           try {
@@ -3727,7 +3727,7 @@ router.put('/maps/:id', uploadImage, compressImage, async (req, res) => {
   const { description } = req.body;
 
   try {
-    const bucketName = 'fumiplagax';
+    const bucketName = 'impecol';
     let s3Url = null;
     let signedUrl = null;
 
@@ -3797,7 +3797,7 @@ router.delete('/maps/:id', async (req, res) => {
 
     // Eliminar la imagen de S3
     if (imageUrl) {
-      const bucketName = 'fumiplagax';
+      const bucketName = 'impecol';
 
       // Extraer la clave del objeto S3 a partir de la URL pública
       const keyMatch = imageUrl.match(/client_maps\/.+$/); // Buscar "client_maps/" y todo lo que sigue
@@ -3940,7 +3940,7 @@ const uploadDocx = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB límite
 }).single('file');
 
-const bucketName = 'fumiplagax';
+const bucketName = 'impecol';
 const templatesPath = 'documents/templates/';
 
 // Ruta para crear una nueva plantilla
@@ -6344,7 +6344,7 @@ router.post('/create-document-client', async (req, res) => {
       js2xml: require('xml-js').js2xml, // Convertir JSON a XML
       getSignedUrl: getSignedUrl, // Función para obtener URLs firmadas de S3
       uploadFile: uploadFile, // Función para subir archivos a S3
-      bucketName: "fumiplagax", // Nombre del bucket S3
+      bucketName: "impecol", // Nombre del bucket S3
       Buffer: Buffer, // Agregar Buffer al sandbox
       sharp,
       moment,
@@ -6409,7 +6409,7 @@ router.post('/create-document-service', async (req, res) => {
       js2xml: require('xml-js').js2xml, // Convertir JSON a XML
       getSignedUrl: getSignedUrl, // Función para obtener URLs firmadas de S3
       uploadFile: uploadFile, // Función para subir archivos a S3
-      bucketName: "fumiplagax", // Nombre del bucket S3
+      bucketName: "impecol", // Nombre del bucket S3
       Buffer: Buffer, // Agregar Buffer al sandbox
       sharp,
       moment,
@@ -6476,7 +6476,7 @@ router.post('/create-document-inspeccion', async (req, res) => {
       js2xml: require('xml-js').js2xml, // Convertir JSON a XML
       getSignedUrl: getSignedUrl, // Función para obtener URLs firmadas de S3
       uploadFile: uploadFile, // Función para subir archivos a S3
-      bucketName: "fumiplagax", // Nombre del bucket S3
+      bucketName: "impecol", // Nombre del bucket S3
       Buffer: Buffer, // Agregar Buffer al sandbox
       sharp,
       moment,
