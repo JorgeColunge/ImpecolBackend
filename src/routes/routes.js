@@ -1388,12 +1388,36 @@ const uploadFileToS3 = async (fileBuffer, fileName, mimeType) => {
 
 // Ruta para crear producto
 router.post('/products', uploadProductFiles, async (req, res) => {
-  const { name, description_type, dose, residual_duration, category } = req.body;
+  const {
+    name,
+    description_type,
+    dose,
+    residual_duration,
+    batch,
+    expiration_date,
+    unity,
+    active_ingredient,
+    category,
+    health_record // ✅ Agregado aquí
+  } = req.body;  
 
-  console.log('Categorías:', category);
+  console.log('Categorías recibidas:', category);
 
-  // Convierte el arreglo de categorías en una cadena separada por comas
-  const formattedCategory = Array.isArray(category) ? category.join(', ') : category;
+  // Convierte el arreglo de categorías en una cadena JSON válida
+  let formattedCategory;
+  if (Array.isArray(category)) {
+    formattedCategory = JSON.stringify(category); // Convierte a JSON sin estructuras anidadas
+  } else if (typeof category === 'string') {
+    try {
+      formattedCategory = JSON.stringify(JSON.parse(category)); // Intenta parsear si ya es JSON en string
+    } catch (error) {
+      formattedCategory = JSON.stringify(category.split(',').map(item => item.trim())); // Divide y limpia si es una lista separada por comas
+    }
+  } else {
+    formattedCategory = '[]'; // Valor por defecto si no hay categorías
+  }
+
+  console.log('Categoría procesada:', formattedCategory); // ✅ Log para depuración
 
   let fileUrls = {};
 
@@ -1418,20 +1442,40 @@ router.post('/products', uploadProductFiles, async (req, res) => {
 
     // Insertar los datos del producto en la base de datos
     const query = `
-      INSERT INTO products (name, description_type, dose, residual_duration, category, safety_data_sheet, technical_sheet, health_registration, emergency_card)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
-    `;
+    INSERT INTO products (
+      name,
+      description_type,
+      dose,
+      residual_duration,
+      batch, 
+      expiration_date,
+      category,
+      active_ingredient,
+      health_record,
+      unity,
+      safety_data_sheet,
+      technical_sheet,
+      health_registration,
+      emergency_card
+    ) VALUES ($1, $2, $3, $4, $5, TO_DATE($6, 'YYYY-MM-DD'), $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *
+    `;    
+    
     const values = [
       name,
       description_type,
       dose,
       residual_duration,
-      formattedCategory, // Categorías separadas por comas
+      batch || null, // Asegurar que no sea undefined
+      expiration_date ? expiration_date.split('T')[0] : null, // Formatea la fecha correctamente
+      formattedCategory, // ✅ Ahora correctamente formateado
+      active_ingredient,
+      health_record || null,
+      unity,
       fileUrls.safety_data_sheet || null,
       fileUrls.technical_sheet || null,
       fileUrls.health_registration || null,
-      fileUrls.emergency_card || null,
-    ];
+      fileUrls.emergency_card || null
+    ];            
 
     const result = await pool.query(query, values);
 
@@ -1469,28 +1513,125 @@ router.get('/products/:id', async (req, res) => {
   }
 });
 
-// Editar producto
-router.put('/products/:id', async (req, res) => {
+function parseCategory(category) {
+  try {
+    if (!category) return []; // Si está vacío, retorna array vacío
+    if (Array.isArray(category)) return category; // Si ya es un array, lo retorna
+    if (category.startsWith("[") && category.endsWith("]")) return JSON.parse(category); // Si es JSON válido, lo parsea
+    return category.split(',').map(cat => cat.trim()); // Si es una cadena separada por comas, lo divide
+  } catch (error) {
+    console.error("⚠️ Error al procesar categorías:", error);
+    return []; // En caso de error, retorna un array vacío
+  }
+}
+
+router.put('/products/:id', uploadProductFiles, async (req, res) => {
   const { id } = req.params;
-  const { name, description_type, dose, residual_duration, safety_data_sheet, technical_sheet, health_registration, emergency_card } = req.body;
+  const {
+    name,
+    description_type,
+    dose,
+    residual_duration,
+    batch,
+    expiration_date,
+    unity,
+    active_ingredient,
+    category,
+    health_record // ✅ Agregado aquí
+  } = req.body;  
+  
+  console.log("Datos recibidos en la actualización:", req.body); // Debug para verificar datos  
+
+  console.log('Categorías recibidas:', category);
+
+  // Convierte el arreglo de categorías en una cadena JSON válida
+  let formattedCategory;
+  if (Array.isArray(category)) {
+    formattedCategory = JSON.stringify(category); // Convierte a JSON sin estructuras anidadas
+  } else if (typeof category === 'string') {
+    try {
+      formattedCategory = JSON.stringify(JSON.parse(category)); // Intenta parsear si ya es JSON en string
+    } catch (error) {
+      formattedCategory = JSON.stringify(category.split(',').map(item => item.trim())); // Divide y limpia si es una lista separada por comas
+    }
+  } else {
+    formattedCategory = '[]'; // Valor por defecto si no hay categorías
+  }
+
+  console.log('Categoría procesada:', formattedCategory); // ✅ Log para depuración
+
+  let fileUrls = {};
 
   try {
+    // Procesar archivos opcionales
+    if (req.files?.safety_data_sheet) {
+      const file = req.files.safety_data_sheet[0];
+      fileUrls.safety_data_sheet = await uploadFileToS3(file.buffer, file.originalname, file.mimetype);
+    }
+    if (req.files?.technical_sheet) {
+      const file = req.files.technical_sheet[0];
+      fileUrls.technical_sheet = await uploadFileToS3(file.buffer, file.originalname, file.mimetype);
+    }
+    if (req.files?.health_registration) {
+      const file = req.files.health_registration[0];
+      fileUrls.health_registration = await uploadFileToS3(file.buffer, file.originalname, file.mimetype);
+    }
+    if (req.files?.emergency_card) {
+      const file = req.files.emergency_card[0];
+      fileUrls.emergency_card = await uploadFileToS3(file.buffer, file.originalname, file.mimetype);
+    }
+
+    // 🔍 Maneja el caso en que `name` sea null
+    if (!name) {
+      return res.status(400).json({ success: false, message: "El campo 'name' es obligatorio." });
+    }
+
     const query = `
-      UPDATE products
-      SET name = $1, description_type = $2, dose = $3, residual_duration = $4, safety_data_sheet = $5,
-          technical_sheet = $6, health_registration = $7, emergency_card = $8
-      WHERE id = $9 RETURNING *
-    `;
-    const values = [name, description_type, dose, residual_duration, safety_data_sheet, technical_sheet, health_registration, emergency_card, id];
+    UPDATE products
+    SET name = $1, 
+        description_type = $2, 
+        dose = $3, 
+        residual_duration = $4, 
+        batch = $5, 
+        expiration_date = TO_DATE($6, 'YYYY-MM-DD'), -- ✅ Conversión correcta de fecha
+        unity = $7,
+        active_ingredient = $8,
+        health_record = $9,
+        category = $10, -- ✅ Se guarda correctamente
+        safety_data_sheet = COALESCE($11, safety_data_sheet),
+        technical_sheet = COALESCE($12, technical_sheet),
+        health_registration = COALESCE($13, health_registration),
+        emergency_card = COALESCE($14, emergency_card)
+    WHERE id = $15 RETURNING *
+    `;    
+
+    const values = [
+      name,
+      description_type,
+      dose,
+      residual_duration,
+      batch || null,
+      expiration_date ? expiration_date.split('T')[0] : null, // Formatea la fecha correctamente
+      unity,
+      active_ingredient,
+      health_record || null,
+      formattedCategory,
+      fileUrls.safety_data_sheet || null,
+      fileUrls.technical_sheet || null,
+      fileUrls.health_registration || null,
+      fileUrls.emergency_card || null,
+      id
+    ];       
+
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Producto no encontrado" });
     }
-    res.json({ success: true, message: "Product updated successfully", product: result.rows[0] });
+    res.json({ success: true, message: "Producto actualizado correctamente", product: result.rows[0] });
   } catch (error) {
-    console.error("Error updating product:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Error al actualizar el producto:", error);
+    res.status(500).json({ success: false, message: "Error del servidor" });
   }
 });
 
@@ -1513,7 +1654,7 @@ router.delete('/products/:id', async (req, res) => {
 
 // Ruta para crear una nueva inspección
 router.post('/inspections', async (req, res) => {
-  const { date, time, service_id, inspection_type, inspection_sub_type } = req.body;
+  const { date, time, service_id, inspection_type, inspection_sub_type, createdBy } = req.body;
 
   // Validación de campos obligatorios
   if (!date || !time || !inspection_type || !service_id) {
@@ -1530,8 +1671,8 @@ router.post('/inspections', async (req, res) => {
 
     // Crear inspección en la tabla
     const query = `
-      INSERT INTO inspections (date, time, service_id, inspection_type, inspection_sub_type)
-      VALUES ($1, $2, $3, $4, $5) RETURNING *;
+      INSERT INTO inspections (date, time, service_id, inspection_type, inspection_sub_type, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
     `;
     const values = [
       date,
@@ -1539,6 +1680,7 @@ router.post('/inspections', async (req, res) => {
       service_id,
       Array.isArray(inspection_type) ? inspection_type.join(", ") : inspection_type,
       inspection_sub_type || null,
+      createdBy,
     ];
     const result = await pool.query(query, values);
 
@@ -6524,6 +6666,20 @@ router.post('/create-document-inspeccion', async (req, res) => {
       success: false 
     });
   }
+});
+
+router.post('/emit-inspection-update', (req, res) => {
+  const { oldId, newId } = req.body;
+
+  if (!oldId || !newId) {
+    return res.status(400).json({ success: false, message: "Faltan parámetros oldId o newId" });
+  }
+
+  console.log(`📡 Backend emitiendo evento 'inspection_synced' con oldId: ${oldId}, newId: ${newId}`);
+
+  req.io.emit('inspection_synced', { oldId, newId });
+
+  res.json({ success: true, message: "Evento emitido con éxito" });
 });
 
 module.exports = router;
