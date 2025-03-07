@@ -3388,7 +3388,7 @@ const genericImagePaths = req.files.images
     const { name: responsibleName, type: responsibleType } = responsibleNameResult;
 
     // Mensaje de notificación basado en firmas y tipo de responsable
-    if (updatedSignatures.client?.signature && updatedSignatures.technician?.signature) {
+    if (updatedSignatures.technician?.signature) {
       notificationMessage = `${responsibleName} ha finalizado el servicio con ID ${inspectionId} a las ${exitTime}.`;
     } else if (responsibleType === "user") {
       notificationMessage = `${responsibleName} ha actualizado la inspección con ID ${inspectionId} a las ${exitTime}.`;
