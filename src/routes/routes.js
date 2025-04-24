@@ -7449,16 +7449,26 @@ router.post('/botix_api', async (req, res) => {
 });
 
 router.put('/update-from-botix', async (req, res) => {
-  const { external_id, date, start_time, end_time } = req.body;
+  const { external_id, start_time, end_time } = req.body;
 
-  if (!external_id || !date || !start_time || !end_time) {
+  if (!external_id || !start_time || !end_time) {
     return res.status(400).json({
       success: false,
-      message: "Faltan datos requeridos: external_id, date, start_time, end_time."
+      message: "Faltan datos requeridos: external_id, start_time, end_time."
     });
   }
 
   try {
+    // Convertir a hora de Colombia
+    const startDateCol = moment(new Date(start_time)).tz('America/Bogota');
+    const endDateCol = moment(new Date(end_time)).tz('America/Bogota');
+
+    // Fechas y horas separadas
+    const fecha_inicio = startDateCol.format('YYYY-MM-DD');
+    const hora_inicio = startDateCol.format('HH:mm:ss');
+    const fecha_fin = endDateCol.format('YYYY-MM-DD');
+    const hora_fin = endDateCol.format('HH:mm:ss');
+
     // Buscar el evento por external_id
     const eventQuery = await pool.query('SELECT * FROM service_schedule WHERE external_id = $1', [external_id]);
     if (eventQuery.rows.length === 0) {
@@ -7466,16 +7476,16 @@ router.put('/update-from-botix', async (req, res) => {
     }
 
     const event = eventQuery.rows[0];
-    const service_id = event.service_id; // Mantener el service_id existente
+    const service_id = event.service_id;
 
-    // Actualizar el evento
+    // Actualizar el evento (manteniendo solo fecha de inicio y las horas)
     const updateQuery = `
       UPDATE service_schedule 
       SET date = $1, start_time = $2, end_time = $3 
       WHERE external_id = $4 
       RETURNING *
     `;
-    const updateValues = [date, start_time, end_time, external_id];
+    const updateValues = [fecha_inicio, hora_inicio, hora_fin, external_id];
     const result = await pool.query(updateQuery, updateValues);
     const updatedEvent = result.rows[0];
 
@@ -7492,8 +7502,8 @@ router.put('/update-from-botix', async (req, res) => {
     const emitEvent = {
       id: updatedEvent.id,
       service_id: service_id,
-      start: `${date}T${start_time}`,
-      end: `${date}T${end_time}`,
+      start: `${fecha_inicio}T${hora_inicio}`,
+      end: `${fecha_fin}T${hora_fin}`,
       title: `Servicio ${service_id}`,
       responsible,
       serviceType: service.service_type
@@ -7503,7 +7513,7 @@ router.put('/update-from-botix', async (req, res) => {
     req.io.to(client_id.toString()).emit('updateEvent', emitEvent);
 
     // Notificación al responsable
-    const notificationMessage = `El servicio ${service_id} ha sido actualizado para el ${date} a las ${start_time}.`;
+    const notificationMessage = `El servicio ${service_id} ha sido actualizado para el ${fecha_inicio} a las ${hora_inicio}.`;
 
     const notificationQuery = `
       INSERT INTO notifications (user_id, notification, state)
