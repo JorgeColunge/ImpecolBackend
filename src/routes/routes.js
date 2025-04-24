@@ -7294,7 +7294,7 @@ router.post('/botix_api', async (req, res) => {
     const startDateObj = new Date(start_time);
     const endDateObj = new Date(end_time);
 
-    const fecha = startDateObj.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    const date = startDateObj.toISOString().split('T')[0]; // "YYYY-MM-DD"
     const hora_inicio = startDateObj.toTimeString().split(' ')[0]; // "HH:MM:SS"
     const hora_fin = endDateObj.toTimeString().split(' ')[0]; // "HH:MM:SS"
     let clientId;
@@ -7342,8 +7342,8 @@ router.post('/botix_api', async (req, res) => {
     }
 
     // Calcular duración y valor (concatenando fecha y hora)
-    const startDateTime = new Date(`${date}T${start_time}`);
-    const endDateTime = new Date(`${date}T${end_time}`);
+    const startDateTime = new Date(`${date}T${hora_inicio}`);
+    const endDateTime = new Date(`${date}T${hora_fin}`);
     const diffMs = endDateTime - startDateTime;
     const duration = Math.ceil(diffMs / (1000 * 60 * 60)); // duración en horas
 
@@ -7390,8 +7390,8 @@ router.post('/botix_api', async (req, res) => {
     const scheduleValues = [
       service.id,
       date,
-      start_time,
-      end_time,
+      hora_inicio,
+      hora_fin,
       external_id
     ];
     const scheduleResult = await pool.query(scheduleQuery, scheduleValues);
@@ -7419,8 +7419,8 @@ router.post('/botix_api', async (req, res) => {
     const newEvent = {
       id: schedule.id,
       service_id: service.id,
-      start: `${date}T${start_time}`,
-      end: `${date}T${end_time}`,
+      start: `${date}T${hora_inicio}`,
+      end: `${date}T${hora_fin}`,
       title: `Servicio ${service.id}`,
       responsible: responsible,
       serviceType: 'Hogar'
