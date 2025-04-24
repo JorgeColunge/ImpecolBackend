@@ -7296,13 +7296,14 @@ router.post('/botix_api', async (req, res) => {
     const cleanedPhone = phone.substring(2);
     const phoneCheck = await pool.query('SELECT id FROM clients WHERE phone LIKE $1', [`%${cleanedPhone}`]);
 
-    // Extraer fecha (YYYY-MM-DD) y horas (HH:mm:ss)
-    const startDateObj = new Date(start_time);
-    const endDateObj = new Date(end_time);
+    // Convertir a hora de Colombia
+    const startDateCol = moment(start_time).tz('America/Bogota');
+    const endDateCol = moment(end_time).tz('America/Bogota');
 
-    const date = startDateObj.toISOString().split('T')[0]; // "YYYY-MM-DD"
-    const hora_inicio = startDateObj.toTimeString().split(' ')[0]; // "HH:MM:SS"
-    const hora_fin = endDateObj.toTimeString().split(' ')[0]; // "HH:MM:SS"
+    // Fechas y horas separadas
+    const date = startDateCol.format('YYYY-MM-DD');
+    const hora_inicio = startDateCol.format('HH:mm:ss');
+    const hora_fin = endDateCol.format('HH:mm:ss');
     let clientId;
 
     if (phoneCheck.rows.length > 0) {
