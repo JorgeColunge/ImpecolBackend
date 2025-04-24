@@ -7350,7 +7350,7 @@ router.post('/botix_api', async (req, res) => {
     }
 
     // Calcular duración sin reconstruir fecha y hora
-    const diffMs = endDateObj - startDateObj;
+    const diffMs = endDateCol - startDateCol;
     const duration = Math.ceil(diffMs / (1000 * 60 * 60)); // duración en horas
 
     const cappedDuration = Math.max(4, Math.min(duration, 8));
