@@ -7280,9 +7280,14 @@ router.get('/events-next-8-days', async (req, res) => {
 });
 
 router.post('/botix_api', async (req, res) => {
-  const { name, address, department, city, phone, responsible, date, start_time, end_time, external_id } = req.body;
+  const { description, responsible, start_time, end_time, external_id } = req.body;
 
   try {
+    // Extraer los datos desde description: formato "57<phone> | <address> | <name>"
+    const [phone, address, name] = description.split(' | ');
+
+    const department = 'Nariño';
+    const city = 'Pasto';
     const cleanedPhone = phone.substring(2);
     const phoneCheck = await pool.query('SELECT id FROM clients WHERE phone LIKE $1', [`%${cleanedPhone}`]);
     let clientId;
