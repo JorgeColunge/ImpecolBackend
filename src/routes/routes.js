@@ -7284,12 +7284,18 @@ router.post('/botix_api', async (req, res) => {
 
   try {
     // Extraer los datos desde description: formato "57<phone> | <address> | <name>"
-    const [phone, address, name] = description.split(' | ');
+    let [phone, address, name] = description.split(' | ');
+
+    // Validar longitud para evitar error de VARCHAR(20)
+    phone = phone.substring(0, 20);
+    address = address.substring(0, 20);
+    name = name.substring(0, 20);
 
     const department = 'Nariño';
     const city = 'Pasto';
     const cleanedPhone = phone.substring(2);
     const phoneCheck = await pool.query('SELECT id FROM clients WHERE phone LIKE $1', [`%${cleanedPhone}`]);
+
     // Extraer fecha (YYYY-MM-DD) y horas (HH:mm:ss)
     const startDateObj = new Date(start_time);
     const endDateObj = new Date(end_time);
@@ -7341,13 +7347,10 @@ router.post('/botix_api', async (req, res) => {
       console.log(`Cliente creado con ID: ${clientId}`);
     }
 
-    // Calcular duración y valor (concatenando fecha y hora)
-    const startDateTime = new Date(`${date}T${hora_inicio}`);
-    const endDateTime = new Date(`${date}T${hora_fin}`);
-    const diffMs = endDateTime - startDateTime;
+    // Calcular duración sin reconstruir fecha y hora
+    const diffMs = endDateObj - startDateObj;
     const duration = Math.ceil(diffMs / (1000 * 60 * 60)); // duración en horas
 
-    // Limitar duración entre 4 y 8 horas
     const cappedDuration = Math.max(4, Math.min(duration, 8));
 
     let value = 0;
@@ -7359,7 +7362,6 @@ router.post('/botix_api', async (req, res) => {
       value = 70000 + ((cappedDuration - 4) * 17000);
     }
 
-    // Crear servicio
     const serviceQuery = `
       INSERT INTO services (
         service_type, description, category, client_id, created_by, responsible, duration, value, companion, intervention_areas
@@ -7381,7 +7383,6 @@ router.post('/botix_api', async (req, res) => {
     const serviceResult = await pool.query(serviceQuery, serviceValues);
     const service = serviceResult.rows[0];
 
-    // Agendar el servicio en service_schedule
     const scheduleQuery = `
       INSERT INTO service_schedule (service_id, date, start_time, end_time, external_id)
       VALUES ($1, $2, $3, $4, $5)
@@ -7397,7 +7398,6 @@ router.post('/botix_api', async (req, res) => {
     const scheduleResult = await pool.query(scheduleQuery, scheduleValues);
     const schedule = scheduleResult.rows[0];
 
-    // Notificación interna al responsable
     if (responsible) {
       const notificationQuery = `
         INSERT INTO notifications (user_id, notification, state)
@@ -7415,7 +7415,6 @@ router.post('/botix_api', async (req, res) => {
       });
     }
 
-    // Emitir evento al responsable y cliente
     const newEvent = {
       id: schedule.id,
       service_id: service.id,
