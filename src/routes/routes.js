@@ -3,7 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 const sharp = require('sharp');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const fs = require('fs');
 const path = require('path');
 const AWS = require('aws-sdk');
@@ -7297,8 +7297,9 @@ router.post('/botix_api', async (req, res) => {
     const phoneCheck = await pool.query('SELECT id FROM clients WHERE phone LIKE $1', [`%${cleanedPhone}`]);
 
     // Convertir a hora de Colombia
-    const startDateCol = moment(start_time).tz('America/Bogota');
-    const endDateCol = moment(end_time).tz('America/Bogota');
+    const startDateCol = moment(new Date(start_time)).tz('America/Bogota');
+    const endDateCol = moment(new Date(end_time)).tz('America/Bogota');
+
 
     // Fechas y horas separadas
     const date = startDateCol.format('YYYY-MM-DD');
