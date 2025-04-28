@@ -7287,14 +7287,14 @@ router.post('/botix_api', async (req, res) => {
     let [phone, address, name] = description.split(' | ');
 
     // Validar longitud para evitar error de VARCHAR(20)
-    phone = phone.slice(2, 22);
+    const newPhone = phone.substring(2);
+    console.log(`El telefono queda: ${newPhone}`)
     address = address.substring(0, 20);
     name = name.substring(0, 20);
 
     const department = 'Nariño';
     const city = 'Pasto';
-    const cleanedPhone = phone.substring(2);
-    const phoneCheck = await pool.query('SELECT id FROM clients WHERE phone LIKE $1', [`%${cleanedPhone}`]);
+    const phoneCheck = await pool.query('SELECT id FROM clients WHERE phone LIKE $1', [`%${newPhone}`]);
 
     // Convertir a hora de Colombia
     const startDateCol = moment(new Date(start_time)).tz('America/Bogota');
@@ -7341,7 +7341,7 @@ router.post('/botix_api', async (req, res) => {
         RETURNING id
       `;
       const insertValues = [
-        name, address, department, city, phone, email,
+        name, address, department, city, newPhone, email,
         document_type, document_number, lat, lng, 'Cliente'
       ];
       const insertResult = await pool.query(insertClientQuery, insertValues);
