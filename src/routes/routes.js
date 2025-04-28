@@ -7287,7 +7287,7 @@ router.post('/botix_api', async (req, res) => {
     let [phone, address, name] = description.split(' | ');
 
     // Validar longitud para evitar error de VARCHAR(20)
-    phone = phone.substring(0, 20);
+    phone = phone.slice(2, 22);
     address = address.substring(0, 20);
     name = name.substring(0, 20);
 
