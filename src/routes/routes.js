@@ -3,7 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 const sharp = require('sharp');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const fs = require('fs');
 const path = require('path');
 const AWS = require('aws-sdk');
@@ -2598,6 +2598,101 @@ router.post('/service-schedule', async (req, res) => {
       color: responsibleData.color,
     };
 
+    const clientQuery = await pool.query('SELECT * FROM clients WHERE id = $1', [client_id]);
+    const client = clientQuery.rows[0];
+
+    if (!client) {
+      return res.status(404).json({ success: false, message: "Cliente no encontrado" });
+    }
+
+    const { name: client_name, address, phone } = client;
+
+    const title = "Servicio de Hogar";
+    const description = `57${phone || "Sin teléfono"} | ${address || "Sin dirección"} | ${client_name || "Sin nombre"}`;
+
+    const apiQuery = await pool.query(`
+      SELECT * FROM scheduling_api_logs
+      WHERE action = 'create' AND user_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+    `, [responsible]);
+    
+    const apiConfig = apiQuery.rows[0];    
+
+    if (apiConfig) {
+      const apiPayload = JSON.parse(apiConfig.api_endpoint);
+    
+      const replacements = {
+        title,
+        description,
+        start_date: date,
+        start_time,
+        end_date: date,
+        end_time,
+        all_day: false,
+        assignment_type: "colaborador",
+        assignment_id: responsible,
+        action: "create",
+        company_id: client_id // o reemplaza por company_id si lo tienes
+      };
+    
+      const applyReplacements = (obj, values) => {
+        const stringified = JSON.stringify(obj);
+        const replaced = stringified.replace(/{{(.*?)}}/g, (_, key) => {
+          return values[key] !== undefined ? values[key] : `{{${key}}}`;
+        });
+        return JSON.parse(replaced);
+      };
+    
+      const finalHeaders = applyReplacements(apiPayload.headers, replacements);
+      const finalBody = applyReplacements(apiPayload.body, replacements);
+
+      // Log de la solicitud completa
+      console.log("🔄 Enviando evento a Botix con los siguientes datos:");
+      console.log("📬 URL:", apiPayload.url);
+      console.log("📨 Headers:", finalHeaders);
+      console.log("📝 Body:", finalBody);
+    
+      try {
+        const axios = require('axios');
+        const botixResponse = await axios({
+          method: apiPayload.method,
+          url: apiPayload.url,
+          headers: finalHeaders,
+          data: finalBody
+        });
+
+        // Actualizar el campo external_id en service_schedule con el ID del evento creado en Botix
+        const externalEventId = botixResponse.data.event ? botixResponse.data.event.id_evento : null;
+
+        if (externalEventId) {
+          const updateQuery = `
+            UPDATE service_schedule
+            SET external_id = $1
+            WHERE id = $2
+          `;
+          await pool.query(updateQuery, [externalEventId, result.rows[0].id]);
+          console.log(`🔗 service_schedule actualizado con external_id: ${externalEventId}`);
+        }
+
+        console.log("✅ Evento sincronizado con Botix:");
+        console.log("📨 Response status:", botixResponse.status);
+        console.log("📩 Response data:", botixResponse.data);
+      
+      } catch (syncError) {
+        console.error("❌ Error sincronizando con Botix:");
+        
+        if (syncError.response) {
+          console.error("🔻 Status:", syncError.response.status);
+          console.error("🔻 Data:", syncError.response.data);
+        } else if (syncError.request) {
+          console.error("🔻 No hubo respuesta de Botix. Revisión del request:", syncError.request);
+        } else {
+          console.error("🔻 Error al configurar la solicitud:", syncError.message);
+        }
+      }
+    }    
+
     // Emitir evento al responsable asignado
     req.io.to(responsible.toString()).emit('newEvent', newEvent);
     console.log(`Evento emitido al responsable ${responsible}:`, newEvent);
@@ -2687,6 +2782,9 @@ router.put('/service-schedule/:id', async (req, res) => {
 
     console.log("Registro actualizado en la base de datos:", result.rows[0]);
 
+    const externalId = result.rows[0].external_id;
+    console.log("🔗 External ID del evento para Botix:", externalId);
+
     // Obtener información del servicio
     const serviceQuery = await pool.query('SELECT * FROM services WHERE id = $1', [service_id]);
     const service = serviceQuery.rows[0];
@@ -2710,6 +2808,89 @@ router.put('/service-schedule/:id', async (req, res) => {
     }
 
     console.log("Datos del responsable:", responsibleData);
+
+    // Obtener información del cliente
+    const clientQuery = await pool.query('SELECT * FROM clients WHERE id = $1', [client_id]);
+    const client = clientQuery.rows[0];
+
+    if (!client) {
+      return res.status(404).json({ success: false, message: "Cliente no encontrado" });
+    }
+
+    const { name: client_name, address, phone } = client;
+    const title = "Servicio de Hogar";
+    const description = `57${phone || "Sin teléfono"} | ${address || "Sin dirección"} | ${client_name || "Sin nombre"}`;
+
+    // Buscar configuración de API para acción "update"
+    const apiQuery = await pool.query(`
+      SELECT * FROM scheduling_api_logs
+      WHERE action = 'update' AND user_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+    `, [responsible]);
+
+    const apiConfig = apiQuery.rows[0];
+
+    if (apiConfig) {
+      const apiPayload = JSON.parse(apiConfig.api_endpoint);
+
+      const replacements = {
+        id_event: externalId,
+        title,
+        description,
+        start_date: date,
+        start_time,
+        end_date: date,
+        end_time,
+        all_day: false,
+        assignment_type: "colaborador",
+        assignment_id: responsible,
+        action: "update",
+        company_id: client_id
+      };
+
+      const applyReplacements = (obj, values) => {
+        const stringified = JSON.stringify(obj);
+        const replaced = stringified.replace(/{{(.*?)}}/g, (_, key) => {
+          return values[key] !== undefined ? values[key] : `{{${key}}}`;
+        });
+        return JSON.parse(replaced);
+      };
+
+      const finalHeaders = applyReplacements(apiPayload.headers, replacements);
+      const finalBody = applyReplacements(apiPayload.body, replacements);
+
+      // Log de la solicitud completa
+      console.log("🔄 Enviando actualización de evento a Botix:");
+      console.log("📬 URL:", apiPayload.url);
+      console.log("📨 Headers:", finalHeaders);
+      console.log("📝 Body:", finalBody);
+
+      try {
+        const axios = require('axios');
+        const botixResponse = await axios({
+          method: apiPayload.method,
+          url: apiPayload.url,
+          headers: finalHeaders,
+          data: finalBody
+        });
+        console.log("✅ Botix respondió correctamente:");
+        console.log("📨 Response status:", botixResponse.status);
+        console.log("📩 Response data:", botixResponse.data);
+
+      } catch (syncError) {
+        console.error("❌ Error sincronizando con Botix:");
+
+        if (syncError.response) {
+          console.error("🔻 Status:", syncError.response.status);
+          console.error("🔻 Data:", syncError.response.data);
+        } else if (syncError.request) {
+          console.error("🔻 No hubo respuesta de Botix. Revisión del request:", syncError.request);
+        } else {
+          console.error("🔻 Error al configurar la solicitud:", syncError.message);
+        }
+      }
+    }
 
     // Emitir evento de actualización
     const updatedEvent = {
@@ -2850,6 +3031,8 @@ router.delete('/service-schedule/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: "Registro no encontrado" });
     }
 
+    const externalId = result.rows[0].external_id;
+
     const { service_id } = result.rows[0];
 
     // Obtener información del servicio
@@ -2861,6 +3044,84 @@ router.delete('/service-schedule/:id', async (req, res) => {
     }
 
     const { responsible, companion } = service;
+
+    // 🔄 Sincronizar con Botix si existe configuración para 'delete'
+    const clientQuery = await pool.query('SELECT * FROM clients WHERE id = $1', [service.client_id]);
+    const client = clientQuery.rows[0];
+
+    if (client) {
+      const { name: client_name, address, phone } = client;
+      const title = "Servicio de Hogar";
+      const description = `57${phone || "Sin teléfono"} | ${address || "Sin dirección"} | ${client_name || "Sin nombre"}`;
+
+      const apiQuery = await pool.query(`
+        SELECT * FROM scheduling_api_logs
+        WHERE action = 'delete' AND user_id = $1
+        ORDER BY created_at DESC
+        LIMIT 1
+      `, [responsible]);
+
+      const apiConfig = apiQuery.rows[0];
+
+      if (apiConfig) {
+        const apiPayload = JSON.parse(apiConfig.api_endpoint);
+
+        const replacements = {
+          id_event: externalId,
+          title,
+          description,
+          start_date: result.rows[0].date,
+          start_time: result.rows[0].start_time,
+          end_date: result.rows[0].date,
+          end_time: result.rows[0].end_time,
+          all_day: false,
+          assignment_type: "colaborador",
+          assignment_id: responsible,
+          action: "delete",
+          company_id: service.client_id
+        };
+
+        const applyReplacements = (obj, values) => {
+          const stringified = JSON.stringify(obj);
+          const replaced = stringified.replace(/{{(.*?)}}/g, (_, key) => {
+            return values[key] !== undefined ? values[key] : `{{${key}}}`;
+          });
+          return JSON.parse(replaced);
+        };
+
+        const finalHeaders = applyReplacements(apiPayload.headers, replacements);
+        const finalBody = applyReplacements(apiPayload.body, replacements);
+
+        // Log de la solicitud
+        console.log("🔄 Enviando eliminación de evento a Botix:");
+        console.log("📬 URL:", apiPayload.url);
+        console.log("📨 Headers:", finalHeaders);
+        console.log("📝 Body:", finalBody);
+
+        try {
+          const axios = require('axios');
+          const botixResponse = await axios({
+            method: apiPayload.method,
+            url: apiPayload.url,
+            headers: finalHeaders,
+            data: finalBody
+          });
+          console.log("✅ Botix respondió correctamente:");
+          console.log("📨 Status:", botixResponse.status);
+          console.log("📩 Data:", botixResponse.data);
+        } catch (syncError) {
+          console.error("❌ Error sincronizando con Botix:");
+          if (syncError.response) {
+            console.error("🔻 Status:", syncError.response.status);
+            console.error("🔻 Data:", syncError.response.data);
+          } else if (syncError.request) {
+            console.error("🔻 No hubo respuesta de Botix. Revisión del request:", syncError.request);
+          } else {
+            console.error("🔻 Error al configurar la solicitud:", syncError.message);
+          }
+        }
+      }
+    }
 
     // Notificación al responsable
     const notificationMessage = `El servicio ${service_id} ha sido eliminado.`;
@@ -3170,6 +3431,7 @@ router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (re
       productsByType,
       stationsFindings,
       signatures,
+      exitTime
     });
 
     // Parsear datos de strings a objetos si es necesario
@@ -6930,6 +7192,539 @@ router.post('/emit-inspection-update', (req, res) => {
   req.io.emit('inspection_synced', { oldId, newId });
 
   res.json({ success: true, message: "Evento emitido con éxito" });
+});
+
+router.post('/scheduling-api', async (req, res) => {
+  try {
+    const {
+      user_id,
+      action,
+      assignment_type,
+      assignment_id,
+      Authorization,
+      X_Company_ID
+    } = req.body;
+
+    if (!['create', 'update', 'delete'].includes(action)) {
+      return res.status(400).json({ success: false, message: "Acción no válida" });
+    }
+
+    // Construcción del objeto de sincronización con placeholders
+    const apiPayload = {
+      method: "POST",
+      url: "https://botix360.com:10000/scheduling-events",
+      headers: {
+        Authorization: `Bearer ${Authorization}`,
+        "Content-Type": "application/json",
+        "X-Company-ID": `${X_Company_ID}`
+      },
+      body: {
+        id_event: "{{id_event}}",
+        title: "{{title}}",
+        description: "{{description}}",
+        start_date: "{{start_date}}",
+        start_time: "{{start_time}}",
+        end_date: "{{end_date}}",
+        end_time: "{{end_time}}",
+        all_day: false,
+        assignment_type,
+        assignment_id,
+        action: `{{action}}`
+      }
+    };
+
+    // Guardar en la base de datos
+    const insertQuery = `
+      INSERT INTO scheduling_api_logs (user_id, action, api_endpoint)
+      VALUES ($1, $2, $3) RETURNING *
+    `;
+
+    const result = await pool.query(insertQuery, [
+      user_id,
+      action,
+      JSON.stringify(apiPayload)
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: "Configuración de API registrada exitosamente",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("❌ Error registrando configuración de sincronización:", error);
+    res.status(500).json({ success: false, message: "Error en el servidor", error: error.message });
+  }
+});
+
+router.get('/events-by-responsible-date', async (req, res) => {
+  const { responsible_id, date } = req.query;
+
+  if (!responsible_id || !date) {
+    return res.status(400).json({
+      success: false,
+      message: 'Faltan parámetros obligatorios: responsible_id y date',
+    });
+  }
+
+  try {
+    const query = `
+      SELECT 
+        ss.id AS schedule_id,
+        ss.date,
+        ss.start_time,
+        ss.end_time,
+        s.id AS service_id,
+        s.service_type,
+        s.description,
+        s.category,
+        s.responsible,
+        s.companion,
+        c.id AS client_id,
+        c.name AS client_name,
+        c.address AS client_address,
+        c.phone AS client_phone
+      FROM service_schedule ss
+      JOIN services s ON ss.service_id = s.id
+      JOIN clients c ON s.client_id = c.id
+      WHERE ss.date = $1
+        AND (
+          s.responsible = $2
+          OR $2::text = ANY (string_to_array(replace(replace(companion, '{', ''), '}', ''), ','))
+        )
+      ORDER BY ss.start_time ASC
+    `;
+
+    const values = [date, responsible_id];
+    const result = await pool.query(query, values);
+
+    res.status(200).json({
+      success: true,
+      events: result.rows,
+    });
+
+  } catch (error) {
+    console.error('Error consultando eventos por responsable y fecha:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+    });
+  }
+});
+
+router.get('/events-next-8-days', async (req, res) => {
+  const { responsible_id } = req.query;
+
+  if (!responsible_id) {
+    return res.status(400).json({
+      success: false,
+      message: 'Falta el parámetro obligatorio: responsible_id',
+    });
+  }
+
+  try {
+    const query = `
+      SELECT 
+        ss.id AS schedule_id,
+        ss.date,
+        ss.start_time,
+        ss.end_time,
+        s.id AS service_id,
+        s.service_type,
+        s.description,
+        s.category,
+        s.responsible,
+        s.companion,
+        c.id AS client_id,
+        c.name AS client_name,
+        c.address AS client_address,
+        c.phone AS client_phone
+      FROM service_schedule ss
+      JOIN services s ON ss.service_id = s.id
+      JOIN clients c ON s.client_id = c.id
+      WHERE ss.date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '8 days'
+        AND (
+          s.responsible = $1
+          OR $1::text = ANY (string_to_array(replace(replace(companion, '{', ''), '}', ''), ','))
+        )
+      ORDER BY ss.date, ss.start_time ASC
+    `;
+
+    const values = [responsible_id];
+    const result = await pool.query(query, values);
+
+    res.status(200).json({
+      success: true,
+      events: result.rows,
+    });
+
+  } catch (error) {
+    console.error('Error consultando eventos próximos 8 días:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+    });
+  }
+});
+
+router.post('/botix_api', async (req, res) => {
+  const { description, responsible, start_time, end_time, external_id } = req.body;
+
+  try {
+    // Extraer los datos desde description: formato "57<phone> | <address> | <name>"
+    let [phone, address, name] = description.split(' | ');
+
+    // Validar longitud para evitar error de VARCHAR(20)
+    const newPhone = phone.substring(2);
+    console.log(`El telefono queda: ${newPhone}`)
+    address = address.substring(0, 20);
+    name = name.substring(0, 20);
+
+    const department = 'Nariño';
+    const city = 'Pasto';
+    const phoneCheck = await pool.query('SELECT id FROM clients WHERE phone LIKE $1', [`%${newPhone}`]);
+
+    // Convertir a hora de Colombia
+    const startDateCol = moment(new Date(start_time)).tz('America/Bogota');
+    const endDateCol = moment(new Date(end_time)).tz('America/Bogota');
+
+
+    // Fechas y horas separadas
+    const date = startDateCol.format('YYYY-MM-DD');
+    const hora_inicio = startDateCol.format('HH:mm:ss');
+    const hora_fin = endDateCol.format('HH:mm:ss');
+    let clientId;
+
+    if (phoneCheck.rows.length > 0) {
+      clientId = phoneCheck.rows[0].id;
+      console.log(`Cliente ya existente con ID: ${clientId}`);
+    } else {
+      const today = new Date();
+      const formattedDate = `${today.getDate().toString().padStart(2, '0')}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
+      const email = `botix${formattedDate}@botix.com`;
+      const document_type = 'Cédula';
+      const document_number = `1${Math.floor(10000 + Math.random() * 90000)}`;
+
+      const fullAddress = `${address}, ${city}, ${department}`;
+      const geoResponse = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+      );
+
+      if (geoResponse.data.status !== 'OK') {
+        console.error('Geocoding error:', geoResponse.data.status);
+        return res.status(400).json({
+          success: false,
+          message: 'Error al obtener geolocalización. Verifica la dirección proporcionada.',
+        });
+      }
+
+      const { lat, lng } = geoResponse.data.results[0].geometry.location;
+
+      const insertClientQuery = `
+        INSERT INTO clients (
+          name, address, department, city, phone, email, 
+          document_type, document_number, latitude, longitude, rol
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING id
+      `;
+      const insertValues = [
+        name, address, department, city, newPhone, email,
+        document_type, document_number, lat, lng, 'Cliente'
+      ];
+      const insertResult = await pool.query(insertClientQuery, insertValues);
+      clientId = insertResult.rows[0].id;
+      console.log(`Cliente creado con ID: ${clientId}`);
+    }
+
+    // Calcular duración sin reconstruir fecha y hora
+    const diffMs = endDateCol - startDateCol;
+    const duration = Math.ceil(diffMs / (1000 * 60 * 60)); // duración en horas
+
+    const cappedDuration = Math.max(4, Math.min(duration, 8));
+
+    let value = 0;
+    if (cappedDuration === 4) {
+      value = 70000;
+    } else if (cappedDuration === 8) {
+      value = 135000;
+    } else {
+      value = 70000 + ((cappedDuration - 4) * 17000);
+    }
+
+    const serviceQuery = `
+      INSERT INTO services (
+        service_type, description, category, client_id, created_by, responsible, duration, value, companion, intervention_areas
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *
+    `;
+    const serviceValues = [
+      'Hogar',
+      'Servicio de Hogar',
+      'Puntual',
+      clientId,
+      clientId,
+      responsible,
+      cappedDuration,
+      value,
+      '{""}',
+      '{""}'
+    ];
+    const serviceResult = await pool.query(serviceQuery, serviceValues);
+    const service = serviceResult.rows[0];
+
+    const scheduleQuery = `
+      INSERT INTO service_schedule (service_id, date, start_time, end_time, external_id)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `;
+    const scheduleValues = [
+      service.id,
+      date,
+      hora_inicio,
+      hora_fin,
+      external_id
+    ];
+    const scheduleResult = await pool.query(scheduleQuery, scheduleValues);
+    const schedule = scheduleResult.rows[0];
+
+    if (responsible) {
+      const notificationQuery = `
+        INSERT INTO notifications (user_id, notification, state)
+        VALUES ($1, $2, $3) RETURNING *
+      `;
+      const notifValues = [
+        responsible,
+        `Nuevo servicio de Hogar agendado con ID ${service.id} para el ${date}`,
+        'pending'
+      ];
+      const notifResult = await pool.query(notificationQuery, notifValues);
+      req.io.to(responsible.toString()).emit('notification', {
+        user_id: responsible,
+        notification: notifResult.rows[0]
+      });
+    }
+
+    const newEvent = {
+      id: schedule.id,
+      service_id: service.id,
+      start: `${date}T${hora_inicio}`,
+      end: `${date}T${hora_fin}`,
+      title: `Servicio ${service.id}`,
+      responsible: responsible,
+      serviceType: 'Hogar'
+    };
+
+    req.io.to(responsible.toString()).emit('newEvent', newEvent);
+    req.io.to(clientId.toString()).emit('newEvent', newEvent);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Cliente, servicio y agendamiento creados exitosamente',
+      client_id: clientId,
+      service,
+      schedule
+    });
+
+  } catch (error) {
+    console.error('Error en /botix_api:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+});
+
+router.put('/update-from-botix', async (req, res) => {
+  const { external_id, start_time, end_time } = req.body;
+
+  if (!external_id || !start_time || !end_time) {
+    return res.status(400).json({
+      success: false,
+      message: "Faltan datos requeridos: external_id, start_time, end_time."
+    });
+  }
+
+  try {
+    // Convertir a hora de Colombia
+    const startDateCol = moment(new Date(start_time)).tz('America/Bogota');
+    const endDateCol = moment(new Date(end_time)).tz('America/Bogota');
+
+    // Fechas y horas separadas
+    const fecha_inicio = startDateCol.format('YYYY-MM-DD');
+    const hora_inicio = startDateCol.format('HH:mm:ss');
+    const fecha_fin = endDateCol.format('YYYY-MM-DD');
+    const hora_fin = endDateCol.format('HH:mm:ss');
+
+    // Buscar el evento por external_id
+    const eventQuery = await pool.query('SELECT * FROM service_schedule WHERE external_id = $1', [external_id]);
+    if (eventQuery.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Evento no encontrado con external_id" });
+    }
+
+    const event = eventQuery.rows[0];
+    const service_id = event.service_id;
+
+    // Actualizar el evento (manteniendo solo fecha de inicio y las horas)
+    const updateQuery = `
+      UPDATE service_schedule 
+      SET date = $1, start_time = $2, end_time = $3 
+      WHERE external_id = $4 
+      RETURNING *
+    `;
+    const updateValues = [fecha_inicio, hora_inicio, hora_fin, external_id];
+    const result = await pool.query(updateQuery, updateValues);
+    const updatedEvent = result.rows[0];
+
+    // Obtener información del servicio
+    const serviceQuery = await pool.query('SELECT * FROM services WHERE id = $1', [service_id]);
+    const service = serviceQuery.rows[0];
+    if (!service) {
+      return res.status(404).json({ success: false, message: "Servicio no encontrado" });
+    }
+
+    const { responsible, companion, client_id } = service;
+
+    // Emitir evento al responsable y cliente
+    const emitEvent = {
+      id: updatedEvent.id,
+      service_id: service_id,
+      start: `${fecha_inicio}T${hora_inicio}`,
+      end: `${fecha_fin}T${hora_fin}`,
+      title: `Servicio ${service_id}`,
+      responsible,
+      serviceType: service.service_type
+    };
+
+    req.io.to(responsible.toString()).emit('updateEvent', emitEvent);
+    req.io.to(client_id.toString()).emit('updateEvent', emitEvent);
+
+    // Notificación al responsable
+    const notificationMessage = `El servicio ${service_id} ha sido actualizado para el ${fecha_inicio} a las ${hora_inicio}.`;
+
+    const notificationQuery = `
+      INSERT INTO notifications (user_id, notification, state)
+      VALUES ($1, $2, $3) RETURNING *
+    `;
+    const notificationResult = await pool.query(notificationQuery, [responsible, notificationMessage, 'pending']);
+    req.io.to(responsible.toString()).emit('notification', {
+      user_id: responsible,
+      notification: notificationResult.rows[0],
+    });
+
+    // Notificaciones a acompañantes
+    let parsedCompanion = [];
+    if (companion) {
+      parsedCompanion = companion
+        .replace(/[\{\}\[\]]/g, '')
+        .split(',')
+        .map(id => id.trim().replace(/"/g, ''));
+
+      for (let companionId of parsedCompanion) {
+        const companionNotif = await pool.query(notificationQuery, [companionId, notificationMessage, 'pending']);
+        req.io.to(companionId.toString()).emit('notification', {
+          user_id: companionId,
+          notification: companionNotif.rows[0],
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Evento actualizado exitosamente",
+      event: updatedEvent
+    });
+
+  } catch (error) {
+    console.error("Error en /update-from-botix:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message
+    });
+  }
+});
+
+router.delete('/delete-from-botix', async (req, res) => {
+  const { external_id } = req.body;
+
+  if (!external_id) {
+    return res.status(400).json({
+      success: false,
+      message: "Falta el parámetro obligatorio: external_id"
+    });
+  }
+
+  try {
+    // Buscar el evento por external_id
+    const eventQuery = await pool.query('SELECT * FROM service_schedule WHERE external_id = $1', [external_id]);
+    if (eventQuery.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Evento no encontrado con external_id" });
+    }
+
+    const event = eventQuery.rows[0];
+    const service_id = event.service_id;
+
+    // Obtener información del servicio relacionado
+    const serviceQuery = await pool.query('SELECT * FROM services WHERE id = $1', [service_id]);
+    const service = serviceQuery.rows[0];
+    if (!service) {
+      return res.status(404).json({ success: false, message: "Servicio no encontrado" });
+    }
+
+    const { responsible, companion, client_id } = service;
+
+    // Eliminar el evento
+    await pool.query('DELETE FROM service_schedule WHERE external_id = $1', [external_id]);
+
+    // Emitir evento de eliminación al responsable y cliente
+    req.io.to(responsible.toString()).emit('deleteEvent', { external_id, service_id });
+    req.io.to(client_id.toString()).emit('deleteEvent', { external_id, service_id });
+
+    // Notificación al responsable
+    const notificationMessage = `El servicio ${service_id} ha sido eliminado.`;
+
+    const notificationQuery = `
+      INSERT INTO notifications (user_id, notification, state)
+      VALUES ($1, $2, $3) RETURNING *
+    `;
+    const notificationResult = await pool.query(notificationQuery, [responsible, notificationMessage, 'pending']);
+    req.io.to(responsible.toString()).emit('notification', {
+      user_id: responsible,
+      notification: notificationResult.rows[0],
+    });
+
+    // Notificaciones a acompañantes
+    let parsedCompanion = [];
+    if (companion) {
+      parsedCompanion = companion
+        .replace(/[\{\}\[\]]/g, '')
+        .split(',')
+        .map(id => id.trim().replace(/"/g, ''));
+
+      for (let companionId of parsedCompanion) {
+        const companionNotif = await pool.query(notificationQuery, [companionId, notificationMessage, 'pending']);
+        req.io.to(companionId.toString()).emit('notification', {
+          user_id: companionId,
+          notification: companionNotif.rows[0],
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Evento eliminado exitosamente"
+    });
+
+  } catch (error) {
+    console.error("Error en /delete-from-botix:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message
+    });
+  }
 });
 
 module.exports = router;
