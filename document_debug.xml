@@ -1,0 +1,1958 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se wp14" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+    <w:body>
+        <w:p w:rsidR="00DF6989" w:rsidRDefault="00403527" w:rsidP="00F66F1B">
+            <w:pPr>
+                <w:ind w:left="-426" w:right="-559"/>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+            <w:bookmarkStart w:id="0" w:name="_GoBack"/>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:noProof/>
+                    <w:lang w:val="es-CO"/>
+                </w:rPr>
+                <w:drawing>
+                    <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251659264" behindDoc="1" locked="0" layoutInCell="1" hidden="0" allowOverlap="1" wp14:anchorId="42ADFA9F" wp14:editId="277484FF">
+                        <wp:simplePos x="0" y="0"/>
+                        <wp:positionH relativeFrom="page">
+                            <wp:align>right</wp:align>
+                        </wp:positionH>
+                        <wp:positionV relativeFrom="paragraph">
+                            <wp:posOffset>-94615</wp:posOffset>
+                        </wp:positionV>
+                        <wp:extent cx="7543800" cy="10725150"/>
+                        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                        <wp:wrapNone/>
+                        <wp:docPr id="4" name="image1.jpg"/>
+                        <wp:cNvGraphicFramePr/>
+                        <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                    <pic:nvPicPr>
+                                        <pic:cNvPr id="0" name="image1.jpg"/>
+                                        <pic:cNvPicPr preferRelativeResize="0"/>
+                                    </pic:nvPicPr>
+                                    <pic:blipFill>
+                                        <a:blip r:embed="rId7"/>
+                                        <a:srcRect/>
+                                        <a:stretch>
+                                            <a:fillRect/>
+                                        </a:stretch>
+                                    </pic:blipFill>
+                                    <pic:spPr>
+                                        <a:xfrm>
+                                            <a:off x="0" y="0"/>
+                                            <a:ext cx="7543800" cy="10725150"/>
+                                        </a:xfrm>
+                                        <a:prstGeom prst="rect">
+                                            <a:avLst/>
+                                        </a:prstGeom>
+                                        <a:ln/>
+                                    </pic:spPr>
+                                </pic:pic>
+                            </a:graphicData>
+                        </a:graphic>
+                        <wp14:sizeRelH relativeFrom="margin">
+                            <wp14:pctWidth>0</wp14:pctWidth>
+                        </wp14:sizeRelH>
+                        <wp14:sizeRelV relativeFrom="margin">
+                            <wp14:pctHeight>0</wp14:pctHeight>
+                        </wp14:sizeRelV>
+                    </wp:anchor>
+                </w:drawing>
+            </w:r>
+            <w:bookmarkEnd w:id="0"/>
+        </w:p>
+        <w:p w:rsidR="00DF6989" w:rsidRPr="00F312CC" w:rsidRDefault="00E00DD1">
+            <w:pPr>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                </w:rPr>
+                <w:t xml:space="preserve"></w:t>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="00DF6989" w:rsidRDefault="00F26FF1" w:rsidP="00F26FF1">
+            <w:pPr>
+                <w:jc w:val="center"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t xml:space="preserve"></w:t>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00F26FF1">
+            <w:pPr>
+                <w:jc w:val="center"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00AF0CF3">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00AF0CF3">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00AF0CF3">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00AF0CF3">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00AF0CF3">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00AF0CF3">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00AF0CF3">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00AF0CF3">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00F26FF1">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:jc w:val="right"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="000D287F" w:rsidRDefault="000D287F" w:rsidP="00F26FF1">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:jc w:val="right"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00F26FF1">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:jc w:val="right"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00E00DD1" w:rsidP="00F26FF1">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:jc w:val="right"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+            <w:r w:rsidRPr="00F312CC">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:r>
+                    <w:rPr>
+                        <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                        <w:sz w:val="20"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">ACTA DE SERVICIO No. I-240425-01</w:t>
+                </w:r>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="00F26FF1" w:rsidRDefault="00F26FF1" w:rsidP="00F26FF1">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="000D421C" w:rsidRPr="00F312CC" w:rsidRDefault="003B6023" w:rsidP="00F26FF1">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="left" w:pos="375"/>
+                    <w:tab w:val="center" w:pos="2607"/>
+                </w:tabs>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:sectPr w:rsidR="000D421C" w:rsidRPr="00F312CC" w:rsidSect="00F66F1B">
+                    <w:pgSz w:w="11909" w:h="16834"/>
+                    <w:pgMar w:top="142" w:right="845" w:bottom="284" w:left="850" w:header="720" w:footer="720" w:gutter="0"/>
+                    <w:pgNumType w:start="1"/>
+                    <w:cols w:space="720"/>
+                </w:sectPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidRPr="003B6023">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t>Impecol</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidRPr="003B6023">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> SAS brinda servicios de mantenimiento, limpieza integral y desinfección, respaldados por un equipo profesional. Atendemos sectores como edificios, transporte, hospitales y zonas industriales. </w:t>
+            </w:r>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t>Presentamos la siguiente acta</w:t>
+            </w:r>
+            <w:r w:rsidRPr="003B6023">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t xml:space="preserve"> detallando las actividades realizadas.</w:t>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="001F03FC" w:rsidRPr="008E21B1" w:rsidRDefault="001F03FC">
+            <w:pPr>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:sectPr w:rsidR="001F03FC" w:rsidRPr="008E21B1" w:rsidSect="0016586B">
+                    <w:type w:val="continuous"/>
+                    <w:pgSz w:w="11909" w:h="16834"/>
+                    <w:pgMar w:top="425" w:right="845" w:bottom="1440" w:left="850" w:header="720" w:footer="720" w:gutter="0"/>
+                    <w:pgNumType w:start="1"/>
+                    <w:cols w:num="2" w:space="284"/>
+                </w:sectPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="0047456F" w:rsidRPr="008E21B1" w:rsidRDefault="0047456F" w:rsidP="0047456F">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:b/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:b/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:lastRenderedPageBreak/>
+                <w:t>Fecha:</w:t>
+            </w:r>
+            <w:r w:rsidR="0016586B" w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:b/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t xml:space="preserve"></w:t>
+            </w:r>
+            <w:r w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:r>
+                    <w:rPr>
+                        <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                        <w:sz w:val="20"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">24/04/2025</w:t>
+                </w:r>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="0047456F" w:rsidRPr="008E21B1" w:rsidRDefault="0047456F" w:rsidP="0047456F">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:b/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:b/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:lastRenderedPageBreak/>
+                <w:t>Hora de entrada:</w:t>
+            </w:r>
+            <w:r w:rsidR="0016586B" w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:b/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t xml:space="preserve"></w:t>
+            </w:r>
+            <w:r w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:r>
+                    <w:rPr>
+                        <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                        <w:sz w:val="20"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">16:35:00</w:t>
+                </w:r>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="0047456F" w:rsidRPr="008E21B1" w:rsidRDefault="0047456F" w:rsidP="0047456F">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:b/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:lastRenderedPageBreak/>
+                <w:t>Hora de salida:</w:t>
+            </w:r>
+            <w:r w:rsidR="0016586B" w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:b/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t xml:space="preserve"></w:t>
+            </w:r>
+            <w:r w:rsidR="00D051EF" w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:r>
+                    <w:rPr>
+                        <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                        <w:sz w:val="20"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">17:21:38</w:t>
+                </w:r>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidR="00D051EF" w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidR="00D051EF" w:rsidRPr="008E21B1">
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="00D06C31" w:rsidRPr="008E21B1" w:rsidRDefault="00D06C31" w:rsidP="0047456F">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:b/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:sectPr w:rsidR="00D06C31" w:rsidRPr="008E21B1" w:rsidSect="003B6023">
+                    <w:type w:val="continuous"/>
+                    <w:pgSz w:w="11909" w:h="16834"/>
+                    <w:pgMar w:top="425" w:right="845" w:bottom="1440" w:left="850" w:header="720" w:footer="720" w:gutter="0"/>
+                    <w:pgNumType w:start="1"/>
+                    <w:cols w:num="3" w:space="720"/>
+                </w:sectPr>
+            </w:pPr>
+        </w:p>
+        <w:tbl>
+            <w:tr w:rsidR="009A0D2D" w:rsidRPr="008E21B1" w:rsidTr="000D287F">
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="10204" w:type="dxa"/>
+                        <w:gridSpan w:val="2"/>
+                        <w:shd w:val="clear" w:color="auto" w:fill="9BBB59" w:themeFill="accent3"/>
+                        <w:vAlign w:val="center"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p w:rsidR="009A0D2D" w:rsidRPr="008E21B1" w:rsidRDefault="009A0D2D" w:rsidP="009A0D2D">
+                        <w:pPr>
+                            <w:jc w:val="center"/>
+                            <w:rPr>
+                                <w:b/>
+                                <w:sz w:val="20"/>
+                                <w:szCs w:val="20"/>
+                            </w:rPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r w:rsidRPr="008E21B1">
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                                <w:b/>
+                                <w:szCs w:val="20"/>
+                            </w:rPr>
+                            <w:lastRenderedPageBreak/>
+                            <w:t>GENERALIDADES</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3401" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">EMPRESA</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6803" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">prueba</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3401" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">DIRECCIÓN</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6803" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">cra 25a No 5 sur 09</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3401" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">CORREO ELECTRÓNICO</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6803" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">cliente@gmail.com</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3401" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">NÚMERO TELEFÓNICO</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6803" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">7371383</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3401" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">TIPO DE SERVICIO</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6803" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Lavado de tanque</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p w:rsidR="009A0D2D" w:rsidRDefault="009A0D2D" w:rsidP="00946B1A">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+        </w:p>
+        <w:tbl>
+            <w:tr w:rsidR="00001D29" w:rsidRPr="008E21B1" w:rsidTr="004E3658">
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="10204" w:type="dxa"/>
+                        <w:gridSpan w:val="3"/>
+                        <w:shd w:val="clear" w:color="auto" w:fill="9BBB59" w:themeFill="accent3"/>
+                        <w:vAlign w:val="center"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p w:rsidR="00001D29" w:rsidRDefault="00001D29" w:rsidP="00BF5C1B">
+                        <w:pPr>
+                            <w:jc w:val="center"/>
+                            <w:rPr>
+                                <w:b/>
+                                <w:sz w:val="20"/>
+                                <w:szCs w:val="20"/>
+                            </w:rPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                                <w:b/>
+                                <w:szCs w:val="20"/>
+                            </w:rPr>
+                            <w:t>TABLA DE HALLAZGOS</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2215" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">LUGAR</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4140" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">DESCRIPCIÓN</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3849" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">REGISTRO FOTOGRÁFICO</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2215" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Tanque 1</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4140" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">El tanque presenta condiciones deficientes, evidenciando un notable desaseo y acumulación de suciedad en su superficie exterior. Además, se encuentra destapado, lo que ha permitido la acumulación de una cantidad considerable de residuos en su interior.</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3849" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:drawing xml:space="preserve">
+                                    <wp:inline>
+                                        <wp:extent cx="2309400" cy="3082660"/>
+                                        <wp:docPr id="11" name="Picture 1745530680548-1745530533033.jpg"/>
+                                        <a:graphic>
+                                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                                <pic:pic>
+                                                    <pic:nvPicPr>
+                                                        <pic:cNvPr id="0" name="Picture 1745530680548-1745530533033.jpg"/>
+                                                        <pic:cNvPicPr/>
+                                                    </pic:nvPicPr>
+                                                    <pic:blipFill>
+                                                        <a:blip r:embed="rId11"/>
+                                                        <a:stretch>
+                                                            <a:fillRect/>
+                                                        </a:stretch>
+                                                    </pic:blipFill>
+                                                    <pic:spPr>
+                                                        <a:xfrm>
+                                                            <a:off x="0" y="0"/>
+                                                            <a:ext cx="2309400" cy="3082660"/>
+                                                        </a:xfrm>
+                                                        <a:prstGeom prst="rect">
+                                                            <a:avLst/>
+                                                        </a:prstGeom>
+                                                    </pic:spPr>
+                                                </pic:pic>
+                                            </a:graphicData>
+                                        </a:graphic>
+                                    </wp:inline>
+                                </w:drawing>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2215" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Tanque 1</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4140" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Dentro del tanque se observan residuos sólidos que aparentan ser tierra, así como una notable cantidad de insectos muertos. Esta situación podría propiciar la proliferación de mosquitos.</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3849" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:drawing xml:space="preserve">
+                                    <wp:inline>
+                                        <wp:extent cx="2309400" cy="3067252"/>
+                                        <wp:docPr id="12" name="Picture 1745530680551-1745530548567.jpg"/>
+                                        <a:graphic>
+                                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                                <pic:pic>
+                                                    <pic:nvPicPr>
+                                                        <pic:cNvPr id="0" name="Picture 1745530680551-1745530548567.jpg"/>
+                                                        <pic:cNvPicPr/>
+                                                    </pic:nvPicPr>
+                                                    <pic:blipFill>
+                                                        <a:blip r:embed="rId12"/>
+                                                        <a:stretch>
+                                                            <a:fillRect/>
+                                                        </a:stretch>
+                                                    </pic:blipFill>
+                                                    <pic:spPr>
+                                                        <a:xfrm>
+                                                            <a:off x="0" y="0"/>
+                                                            <a:ext cx="2309400" cy="3067252"/>
+                                                        </a:xfrm>
+                                                        <a:prstGeom prst="rect">
+                                                            <a:avLst/>
+                                                        </a:prstGeom>
+                                                    </pic:spPr>
+                                                </pic:pic>
+                                            </a:graphicData>
+                                        </a:graphic>
+                                    </wp:inline>
+                                </w:drawing>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="2215" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Tanque 1</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="4140" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">El tanque presenta un estado deficiente, caracterizado por una notable falta de limpieza en su exterior. Además, no cuenta con un tapa adecuada, lo que ha propiciado la acumulación de una cantidad significativa de residuos.</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3849" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:drawing xml:space="preserve">
+                                    <wp:inline>
+                                        <wp:extent cx="2309400" cy="1244404"/>
+                                        <wp:docPr id="13" name="Picture 1745530680555-1745530559775.jpg"/>
+                                        <a:graphic>
+                                            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                                <pic:pic>
+                                                    <pic:nvPicPr>
+                                                        <pic:cNvPr id="0" name="Picture 1745530680555-1745530559775.jpg"/>
+                                                        <pic:cNvPicPr/>
+                                                    </pic:nvPicPr>
+                                                    <pic:blipFill>
+                                                        <a:blip r:embed="rId13"/>
+                                                        <a:stretch>
+                                                            <a:fillRect/>
+                                                        </a:stretch>
+                                                    </pic:blipFill>
+                                                    <pic:spPr>
+                                                        <a:xfrm>
+                                                            <a:off x="0" y="0"/>
+                                                            <a:ext cx="2309400" cy="1244404"/>
+                                                        </a:xfrm>
+                                                        <a:prstGeom prst="rect">
+                                                            <a:avLst/>
+                                                        </a:prstGeom>
+                                                    </pic:spPr>
+                                                </pic:pic>
+                                            </a:graphicData>
+                                        </a:graphic>
+                                    </wp:inline>
+                                </w:drawing>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p w:rsidR="00001D29" w:rsidRPr="008E21B1" w:rsidRDefault="00001D29" w:rsidP="00946B1A">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+        </w:p>
+        <w:tbl>
+            <w:tr w:rsidR="009A0D2D" w:rsidRPr="008E21B1" w:rsidTr="000D287F">
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="10204" w:type="dxa"/>
+                        <w:shd w:val="clear" w:color="auto" w:fill="9BBB59" w:themeFill="accent3"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p w:rsidR="009A0D2D" w:rsidRPr="008E21B1" w:rsidRDefault="009A0D2D" w:rsidP="00AF3530">
+                        <w:pPr>
+                            <w:jc w:val="center"/>
+                            <w:rPr>
+                                <w:b/>
+                                <w:sz w:val="20"/>
+                                <w:szCs w:val="20"/>
+                            </w:rPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r w:rsidRPr="008E21B1">
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                                <w:b/>
+                                <w:szCs w:val="20"/>
+                            </w:rPr>
+                            <w:t>CONCLUSIONES</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="10204" w:type="dxa"/>
+                        <w:shd w:fill="D6E3BC"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:jc w:val="center"/>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Observaciones</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="10204" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:jc w:val="both"/>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">- Tanque 1 en estado deplorable, sucio y desaseado en su exterior, sin tapa y con numerosos residuos.  	</w:t>
+                            </w:r>
+                            <w:br/>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">- Interior del tanque presenta sólidos similares a tierra y gran cantidad de insectos muertos.  	</w:t>
+                            </w:r>
+                            <w:br/>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">- Posible proliferación de mosquitos debido a condiciones insalubres del tanque.  	</w:t>
+                            </w:r>
+                            <w:br/>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">- Limpieza realizada, tanque de 100 litros con sedimentos gruesos e incrustaciones visibles.  	</w:t>
+                            </w:r>
+                            <w:br/>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">- Lavado con cepillo de cerdas duras, removiendo residuos adheridos de las paredes internas.  	</w:t>
+                            </w:r>
+                            <w:br/>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">- Aplicación de solución desinfectante adecuada para agua potable, garantizando descontaminación.  	</w:t>
+                            </w:r>
+                            <w:br/>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">- Enjuague con abundante agua limpia, eliminando completamente residuos y agentes de limpieza.</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="10204" w:type="dxa"/>
+                        <w:shd w:fill="D6E3BC"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:jc w:val="center"/>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Proceso</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="10204" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:jc w:val="both"/>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Se llevó a cabo la limpieza de un tanque de almacenamiento de agua con capacidad de 100 litros, cuya condición de suciedad era considerable. El proceso inició con el vaciado total del tanque, seguido del uso de un cepillo de cerdas duras para desprender los sedimentos gruesos e incrustaciones adheridas a las paredes internas. Se aplicó una solución desinfectante adecuada para agua potable, asegurando la eliminación de cualquier contaminante. Finalmente, se realizó un enjuague exhaustivo con agua limpia, garantizando la remoción total de residuos y agentes de limpieza, lo que resulta en un espacio seguro para el almacenamiento de agua.</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p w:rsidR="009A0D2D" w:rsidRDefault="009A0D2D" w:rsidP="00946B1A">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+        </w:p>
+        <w:tbl>
+            <w:tr w:rsidR="00F5265A" w:rsidRPr="008E21B1" w:rsidTr="000D287F">
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="10204" w:type="dxa"/>
+                        <w:gridSpan w:val="2"/>
+                        <w:shd w:val="clear" w:color="auto" w:fill="9BBB59" w:themeFill="accent3"/>
+                        <w:vAlign w:val="center"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p w:rsidR="00F5265A" w:rsidRPr="008E21B1" w:rsidRDefault="00F5265A" w:rsidP="00E065EF">
+                        <w:pPr>
+                            <w:jc w:val="center"/>
+                            <w:rPr>
+                                <w:b/>
+                                <w:sz w:val="20"/>
+                                <w:szCs w:val="20"/>
+                            </w:rPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                                <w:b/>
+                                <w:szCs w:val="20"/>
+                            </w:rPr>
+                            <w:t>DATOS DEL FUNCIONARIO DE IMPECOL SAS</w:t>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3401" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">NOMBRE</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6803" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Jorge Andres Colunge Lopez</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3401" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">NÚMERO DE CC</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6803" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">1125230121</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+            <w:tr>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="3401" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">CARGO</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+                <w:tc>
+                    <w:tcPr>
+                        <w:tcW w:w="6803" w:type="dxa"/>
+                        <w:tcBorders>
+                            <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                            <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                        </w:tcBorders>
+                    </w:tcPr>
+                    <w:p>
+                        <w:pPr>
+                            <w:spacing w:line="240" w:lineRule="auto"/>
+                        </w:pPr>
+                        <w:r>
+                            <w:rPr>
+                                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                <w:sz w:val="20"/>
+                            </w:rPr>
+                            <w:r>
+                                <w:rPr>
+                                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                                    <w:sz w:val="20"/>
+                                </w:rPr>
+                                <w:t xml:space="preserve">Operario de IMPECOL SAS</w:t>
+                            </w:r>
+                        </w:r>
+                    </w:p>
+                </w:tc>
+            </w:tr>
+        </w:tbl>
+        <w:p w:rsidR="00F5265A" w:rsidRDefault="00F5265A" w:rsidP="00946B1A">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00976615" w:rsidRDefault="00976615" w:rsidP="00946B1A">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00976615" w:rsidRDefault="00976615" w:rsidP="00976615">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:jc w:val="center"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:r>
+                    <w:rPr>
+                        <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                        <w:sz w:val="20"/>
+                    </w:rPr>
+                    <w:drawing xml:space="preserve">
+                        <wp:inline>
+                            <wp:extent cx="990000" cy="318284"/>
+                            <wp:docPr id="14" name="Picture 1745530680065-tech_signature.jpg"/>
+                            <a:graphic>
+                                <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                                    <pic:pic>
+                                        <pic:nvPicPr>
+                                            <pic:cNvPr id="0" name="Picture 1745530680065-tech_signature.jpg"/>
+                                            <pic:cNvPicPr/>
+                                        </pic:nvPicPr>
+                                        <pic:blipFill>
+                                            <a:blip r:embed="rId14"/>
+                                            <a:stretch>
+                                                <a:fillRect/>
+                                            </a:stretch>
+                                        </pic:blipFill>
+                                        <pic:spPr>
+                                            <a:xfrm>
+                                                <a:off x="0" y="0"/>
+                                                <a:ext cx="990000" cy="318284"/>
+                                            </a:xfrm>
+                                            <a:prstGeom prst="rect">
+                                                <a:avLst/>
+                                            </a:prstGeom>
+                                        </pic:spPr>
+                                    </pic:pic>
+                                </a:graphicData>
+                            </a:graphic>
+                        </wp:inline>
+                    </w:drawing>
+                </w:r>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="00403527" w:rsidRDefault="00F26FF1" w:rsidP="00403527">
+            <w:pPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+                <w:jc w:val="center"/>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:sectPr w:rsidR="00403527" w:rsidSect="00F66F1B">
+                    <w:headerReference w:type="default" r:id="rId8"/>
+                    <w:type w:val="continuous"/>
+                    <w:pgSz w:w="11909" w:h="16834"/>
+                    <w:pgMar w:top="425" w:right="845" w:bottom="426" w:left="850" w:header="720" w:footer="720" w:gutter="0"/>
+                    <w:pgNumType w:start="1"/>
+                    <w:cols w:space="720"/>
+                </w:sectPr>
+            </w:pPr>
+            <w:r>
+                <w:rPr>
+                    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:t>Firma del funcionario de IMPECOL SAS</w:t>
+            </w:r>
+        </w:p>
+        <w:p w:rsidR="00001D29" w:rsidRPr="00403527" w:rsidRDefault="00001D29" w:rsidP="00403527">
+            <w:pPr>
+                <w:rPr>
+                    <w:sz w:val="20"/>
+                    <w:szCs w:val="20"/>
+                </w:rPr>
+                <w:spacing w:line="240" w:lineRule="auto"/>
+            </w:pPr>
+        </w:p>
+        <w:sectPr w:rsidR="00001D29" w:rsidRPr="00403527" w:rsidSect="00403527">
+            <w:pgSz w:w="11909" w:h="16834"/>
+            <w:pgMar w:top="425" w:right="845" w:bottom="426" w:left="850" w:header="720" w:footer="720" w:gutter="0"/>
+            <w:pgNumType w:start="1"/>
+            <w:cols w:space="720"/>
+        </w:sectPr>
+    </w:body>
+</w:document>

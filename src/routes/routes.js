@@ -2210,13 +2210,20 @@ router.post("/convert-to-pdf", async (req, res) => {
     console.log("Descargando archivo DOCX desde S3...");
     const response = await axios.get(signedUrl, { responseType: "arraybuffer" });
 
-    // Definir la ruta temporal para el archivo DOCX
-    const docxPath = path.join(tempDirectory, `${Date.now()}-document.docx`);
-    console.log("Ruta temporal para el archivo DOCX:", docxPath);
+      // Definir la ruta temporal para el archivo DOCX
+      const docxPath = path.join(tempDirectory, `${Date.now()}-document.docx`);
+      console.log("Ruta temporal para el archivo DOCX:", docxPath);
 
-    // Guardar el archivo DOCX temporalmente
-    fs.writeFileSync(docxPath, response.data);
-    console.log("Archivo DOCX descargado y guardado temporalmente.");
+      // 🟢 Asegurar carpeta aquí
+      const tempDir = path.dirname(docxPath);
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+        console.log(`Carpeta creada: ${tempDir}`);
+      }
+
+      // Guardar el archivo DOCX temporalmente
+      fs.writeFileSync(docxPath, response.data);
+      console.log("Archivo DOCX descargado y guardado temporalmente.");
 
     // Convertir el archivo DOCX a PDF usando `convertToPDF`
     console.log("Iniciando conversión a PDF...");
@@ -5636,131 +5643,120 @@ router.post('/save-configuration', async (req, res) => {
               return promptProcesado;
             };
 
-            // Función para procesar las tablas con prompts "IA-"
-            const procesarTablasConIA = async () => {
-              for (const tabla of tablas) {
-                console.log(\`Procesando tabla "\${tabla.nombre}"...\`);
+              // Función para procesar las tablas con prompts "IA-"
+              const procesarTablasConIA = async () => {
+                console.log("=== 🔁 Iniciando procesamiento de tablas con IA ===");
 
-                const columnasIA = []; // Guardar columnas que contienen prompts con "IA-"
-                const promptsBase = []; // Guardar los prompts base para cada columna
-
-                // Buscar columnas que contienen prompts "IA-"
-                for (let colIndex = 0; colIndex < (tabla.cuerpo[0]?.length || 0); colIndex++) {
-                  for (const row of tabla.cuerpo) {
-                    if (typeof row[colIndex] === 'string' && row[colIndex].startsWith("IA-")) {
-                      columnasIA.push(colIndex);
-                      promptsBase[colIndex] = row[colIndex];
-                      console.log(\`Prompt base encontrado en columna \${colIndex}: "\${promptsBase[colIndex]}"\`);
-                      break;
-                    }
-                  }
-                }
-
-                // Si no hay columnas con prompts "IA-", continuar con la siguiente tabla
-                if (columnasIA.length === 0) {
-                  console.warn(\`No se encontró ningún campo "IA-" en la tabla "\${tabla.nombre}".\`);
-                  continue;
-                }
-
-                // Extraer y dividir las variables de todos los prompts en las columnas IA
-                const valoresVariablesPorColumna = {};
-
-                for (const colIndex of columnasIA) {
-                  const regex = /{{(.*?)}}/g;
-                  const variablesEncontradas = [];
-                  let match;
-
-                  // Extraer variables del prompt base
-                  while ((match = regex.exec(promptsBase[colIndex])) !== null) {
-                    variablesEncontradas.push(match[1]);
-                  }
-
-                  console.log(\`Variables encontradas en el prompt de la columna \${colIndex}: \${variablesEncontradas}\`);
-
-                  // Dividir las variables por "*"
-                  const valoresVariables = {};
-                  variablesEncontradas.forEach((variable) => {
-                    const valorCompleto = variables[variable] || "";
-                    const partes = valorCompleto.split("*");
-                    valoresVariables[variable] = partes;
-                    console.log(\`Variable "\${variable}" dividida en partes:\`, partes);
+                for (const tabla of tablas) {
+                  console.log(\`\n📋 Procesando tabla: "\${tabla.nombre}"\`);
+                  
+                  // 🔍 Log inicial del estado de la tabla
+                  console.log("🧾 Estado inicial de la tabla.cuerpo:");
+                  tabla.cuerpo.forEach((fila, index) => {
+                    console.log(\`Fila \${index}:\`, fila);
                   });
 
-                  valoresVariablesPorColumna[colIndex] = valoresVariables;
-                }
+                  const columnasIA = [];
 
-                // Determinar el número máximo de filas requerido
-                const maxFilas = Math.max(
-                  tabla.cuerpo.length,
-                  ...Object.values(valoresVariablesPorColumna).flatMap((valoresVariables) =>
-                    Object.values(valoresVariables).map((partes) => partes.length)
-                  )
-                );
+                  // 🚨 Buscar prompts IA duplicados por columna
+                  const promptsVistosPorColumna = {};
 
-                // Agregar filas necesarias si faltan
-                while (tabla.cuerpo.length < maxFilas) {
-                  const nuevaFila = Array(tabla.cuerpo[0]?.length || 0).fill("");
-                  tabla.cuerpo.push(nuevaFila);
-                }
+                  for (let colIndex = 0; colIndex < (tabla.cuerpo[0]?.length || 0); colIndex++) {
+                    for (let rowIndex = 0; rowIndex < tabla.cuerpo.length; rowIndex++) {
+                      const celda = tabla.cuerpo[rowIndex][colIndex];
+                      if (typeof celda === 'string' && celda.startsWith("IA-")) {
+                        const key = \`\${colIndex}:\${celda}\`;
 
-                console.log(\`Tabla "\${tabla.nombre}" después de agregar filas necesarias:\`, tabla.cuerpo);
-
-                // Replicar los prompts base en todas las filas de las columnas correspondientes
-                for (const colIndex of columnasIA) {
-                  for (let rowIndex = 0; rowIndex < maxFilas; rowIndex++) {
-                    tabla.cuerpo[rowIndex][colIndex] = promptsBase[colIndex];
+                        if (promptsVistosPorColumna[key]) {
+                          console.warn(\`⚠️ Prompt duplicado en columna \${colIndex}, fila \${rowIndex}. Se limpiará.\`);
+                          tabla.cuerpo[rowIndex][colIndex] = ""; // limpiar prompt duplicado
+                        } else {
+                          promptsVistosPorColumna[key] = true;
+                          columnasIA.push({ colIndex, rowIndex, rawPromptCompleto: celda });
+                          console.log(\`🔍 Detectado campo IA en fila \${rowIndex}, columna \${colIndex}: "\${celda}"\`);
+                        }
+                      }
+                    }
                   }
-                }
 
-                console.log(\`Tabla "\${tabla.nombre}" después de replicar los prompts base:\`, tabla.cuerpo);
+                  if (columnasIA.length === 0) {
+                    console.warn(\`⚠️ No se encontró ningún campo "IA-" en la tabla "\${tabla.nombre}".\`);
+                    continue;
+                  }
 
-                // Procesar cada fila individualmente para todas las columnas IA
-                for (let rowIndex = 0; rowIndex < tabla.cuerpo.length; rowIndex++) {
-                  const row = tabla.cuerpo[rowIndex];
+                  for (const { colIndex, rowIndex: filaInicial, rawPromptCompleto: rawPromptCompletoOriginal } of columnasIA) {
+                    const rawPromptCompleto = rawPromptCompletoOriginal;
+                    const partesPrompt = rawPromptCompleto.split("-");
+                    const modeloIA = partesPrompt[1];
+                    const condicion = partesPrompt.length > 3 ? partesPrompt.pop() : "S";
+                    const promptSinModelo = partesPrompt.slice(2).join("-");
 
-                  for (const colIndex of columnasIA) {
-                    const value = row[colIndex];
-                    console.log(\`Procesando valor en fila \${rowIndex}, columna \${colIndex}. Tipo: \${typeof value}, Valor:\`, value);
+                    console.log(\`\n🤖 Modelo IA: \${modeloIA}, Condición: \${condicion}\`);
+                    console.log(\`📄 Prompt base: "\${promptSinModelo}"\`);
 
-                    if (typeof value === 'string' && value.startsWith("IA-")) {
-                      console.log(\`Campo identificado como IA. Valor: \${value}\`);
-                      const [_, modeloIA, rawPrompt] = value.split('-');
+                    const regex = /{{(.*?)}}/g;
+                    const variablesEncontradas = [];
+                    let match;
 
-                      // Construir variables específicas para esta fila
+                    while ((match = regex.exec(promptSinModelo)) !== null) {
+                      variablesEncontradas.push(match[1]);
+                    }
+
+                    const valoresVariables = {};
+                    variablesEncontradas.forEach((variable) => {
+                      const valorCompleto = variables[variable] || "";
+                      const partes = condicion === "S"
+                        ? valorCompleto.split("*").map(p => p.trim()).filter(p => p)
+                        : [valorCompleto];
+                      valoresVariables[variable] = partes;
+                      console.log(\`📌 Variable "\${variable}" dividida en partes (\${partes.length}):\`, partes);
+                    });
+
+                    const cantidadFilas = condicion === "S"
+                      ? Math.max(...Object.values(valoresVariables).map(arr => arr.length))
+                      : 1;
+
+                    console.log(\`📊 Se generarán \${cantidadFilas} fila(s) para columna \${colIndex}\`);
+
+                    while (tabla.cuerpo.length < filaInicial + cantidadFilas) {
+                      tabla.cuerpo.push(Array(tabla.cuerpo[0]?.length || 0).fill(""));
+                    }
+
+                    for (let i = 0; i < cantidadFilas; i++) {
+                      const filaActual = filaInicial + i;
                       const filaVariables = {};
-                      const valoresVariables = valoresVariablesPorColumna[colIndex];
+
                       for (const variable in valoresVariables) {
-                        filaVariables[variable] = valoresVariables[variable]?.[rowIndex] || "Variable no encontrada";
+                        filaVariables[variable] = valoresVariables[variable][i] || "Variable no encontrada";
                       }
 
-                      // Procesar el prompt con las variables específicas de esta fila
-                      const prompt = procesarPromptConInputs(rawPrompt, filaVariables);
-
+                      const promptProcesado = procesarPromptConInputs(promptSinModelo, filaVariables);
                       const modeloEncontrado = aiModels.find((ai) => ai.name === modeloIA);
+
                       if (!modeloEncontrado) {
-                        console.warn(\`Modelo IA no encontrado para el campo en la tabla "\${tabla.nombre}".\`);
-                        row[colIndex] = "Modelo no encontrado";
+                        console.warn(\`⚠️ Modelo IA "\${modeloIA}" no encontrado.\`);
+                        tabla.cuerpo[filaActual][colIndex] = "Modelo no encontrado";
                         continue;
                       }
 
-                      const { model, personality } = modeloEncontrado;
                       try {
-                        console.log(\`Consultando GPT con modelo: "\${model}", personalidad: "\${personality}"\`);
-                        // Usar await para resolver la Promesa
-                        const resultadoIA = await consultarGPT(model, personality, prompt);
-                        row[colIndex] = resultadoIA;
-                        console.log(\`Valor generado por la IA para fila \${rowIndex}, columna \${colIndex}: \${resultadoIA}\`);
+                        console.log(\`➡️ Consultando GPT para fila \${filaActual}, con prompt:\`, promptProcesado);
+                        const { model, personality } = modeloEncontrado;
+                        const resultadoIA = await consultarGPT(model, personality, promptProcesado);
+                        tabla.cuerpo[filaActual][colIndex] = resultadoIA;
+                        console.log(\`✅ Resultado GPT fila \${filaActual}, columna \${colIndex}:\`, resultadoIA);
                       } catch (error) {
-                        console.error(\`Error al consultar IA para fila \${rowIndex}, columna \${colIndex}:\`, error);
-                        row[colIndex] = "Error al generar valor con IA";
+                        console.error(\`❌ Error al consultar GPT:\`, error);
+                        tabla.cuerpo[filaActual][colIndex] = "Error al generar valor con IA";
                       }
                     }
                   }
+
+                  console.log(\`✅ Tabla "\${tabla.nombre}" actualizada:\`, tabla.cuerpo);
                 }
 
-                console.log(\`Tabla "\${tabla.nombre}" actualizada:\`, tabla.cuerpo);
-              }
-            };
+                console.log("=== ✅ Finalizado procesamiento de tablas con IA ===");
+              };
 
             // Llamar a la función para procesar las tablas IA
             await procesarTablasConIA();
@@ -6217,157 +6213,163 @@ router.post('/save-configuration', async (req, res) => {
                 }));
               };                                                       
               
-              // Función para crear una fila de tabla con bordes opcionales
-              const createRow = (values, cellStyles = [], withBorders = true) => {
-                console.log("=== Creando nueva fila ===");
-                return {
-                  type: 'element',
-                  name: 'w:tr',
-                  elements: values.map((value, index) => {
-                    const {
-                      widthAttributes,
-                      gridSpan,
-                      textColor,
-                      bgColor,
-                      fontStyle,
-                      fontSize,
-                      textAlign,
-                      verticalAlign,
-                    } = cellStyles[index] || { widthAttributes: { 'w:w': '2000', 'w:type': 'dxa' }, gridSpan: 1 };
-              
-                    console.log(
-                      \`Celda \${index + 1}: Aplicando atributos\`,
-                      widthAttributes,
-                      \`GridSpan: \${gridSpan}, TextColor: \${textColor}, BgColor: \${bgColor}, FontStyle: \${fontStyle}, FontSize: \${fontSize}, TextAlign: \${textAlign}, VerticalAlign: \${verticalAlign}\`
-                    );
-              
-                    const gridSpanElement =
-                      gridSpan > 1
-                        ? {
+            // Función para crear una fila de tabla con bordes opcionales
+            const createRow = (values, cellStyles = [], withBorders = true) => {
+              console.log("=== Creando nueva fila ===");
+              return {
+                type: 'element',
+                name: 'w:tr',
+                elements: values.map((value, index) => {
+                  const {
+                    widthAttributes,
+                    gridSpan,
+                    textColor,
+                    bgColor,
+                    fontStyle,
+                    fontSize,
+                    textAlign,
+                    verticalAlign,
+                  } = cellStyles[index] || { widthAttributes: { 'w:w': '2000', 'w:type': 'dxa' }, gridSpan: 1 };
+            
+                  console.log(
+                    \`Celda \${index + 1}: Aplicando atributos\`,
+                    widthAttributes,
+                    \`GridSpan: \${gridSpan}, TextColor: \${textColor}, BgColor: \${bgColor}, FontStyle: \${fontStyle}, FontSize: \${fontSize}, TextAlign: \${textAlign}, VerticalAlign: \${verticalAlign}\`
+                  );
+            
+                  const gridSpanElement =
+                    gridSpan > 1
+                      ? {
+                          type: 'element',
+                          name: 'w:gridSpan',
+                          attributes: { 'w:val': gridSpan.toString() },
+                        }
+                      : null;
+            
+                  const bgColorElement = bgColor
+                    ? {
+                        type: 'element',
+                        name: 'w:shd',
+                        attributes: { 'w:fill': bgColor },
+                      }
+                    : null;
+            
+                  const textAlignElement = textAlign
+                    ? {
+                        type: 'element',
+                        name: 'w:jc',
+                        attributes: { 'w:val': textAlign },
+                      }
+                    : null;
+            
+                  const verticalAlignElement = verticalAlign
+                    ? {
+                        type: 'element',
+                        name: 'w:vAlign',
+                        attributes: { 'w:val': verticalAlign },
+                      }
+                    : null;
+            
+                  return {
+                    type: 'element',
+                    name: 'w:tc',
+                    elements: [
+                      {
+                        type: 'element',
+                        name: 'w:tcPr',
+                        elements: [
+                          {
                             type: 'element',
-                            name: 'w:gridSpan',
-                            attributes: { 'w:val': gridSpan.toString() },
-                          }
-                        : null;
-              
-                    const bgColorElement = bgColor
-                      ? {
-                          type: 'element',
-                          name: 'w:shd',
-                          attributes: { 'w:fill': bgColor },
-                        }
-                      : null;
-              
-                    const textAlignElement = textAlign
-                      ? {
-                          type: 'element',
-                          name: 'w:jc',
-                          attributes: { 'w:val': textAlign },
-                        }
-                      : null;
-              
-                    const verticalAlignElement = verticalAlign
-                      ? {
-                          type: 'element',
-                          name: 'w:vAlign',
-                          attributes: { 'w:val': verticalAlign },
-                        }
-                      : null;
-              
-                    return {
-                      type: 'element',
-                      name: 'w:tc',
-                      elements: [
+                            name: 'w:tcW',
+                            attributes: widthAttributes, // Aplicar ancho original o combinado
+                          },
+                          ...(gridSpanElement ? [gridSpanElement] : []), // Añadir gridSpan si aplica
+                          ...(bgColorElement ? [bgColorElement] : []), // Añadir bgColor si aplica
+                          ...(verticalAlignElement ? [verticalAlignElement] : []), // Añadir alineación vertical si aplica
+                          ...(withBorders
+                            ? [
+                                {
+                                  type: 'element',
+                                  name: 'w:tcBorders',
+                                  elements: [
+                                    { name: 'w:top', type: 'element', attributes: { 'w:val': 'single', 'w:sz': '4', 'w:space': '0', 'w:color': 'auto' } },
+                                    { name: 'w:bottom', type: 'element', attributes: { 'w:val': 'single', 'w:sz': '4', 'w:space': '0', 'w:color': 'auto' } },
+                                    { name: 'w:left', type: 'element', attributes: { 'w:val': 'single', 'w:sz': '4', 'w:space': '0', 'w:color': 'auto' } },
+                                    { name: 'w:right', type: 'element', attributes: { 'w:val': 'single', 'w:sz': '4', 'w:space': '0', 'w:color': 'auto' } },
+                                  ],
+                                },
+                              ]
+                            : []),
+                        ],
+                      },
+                      {
+                        type: 'element',
+                        name: 'w:p',
+                        elements: [
                         {
                           type: 'element',
-                          name: 'w:tcPr',
+                          name: 'w:pPr',
                           elements: [
-                            {
-                              type: 'element',
-                              name: 'w:tcW',
-                              attributes: widthAttributes, // Aplicar ancho original o combinado
-                            },
-                            ...(gridSpanElement ? [gridSpanElement] : []), // Añadir gridSpan si aplica
-                            ...(bgColorElement ? [bgColorElement] : []), // Añadir bgColor si aplica
-                            ...(verticalAlignElement ? [verticalAlignElement] : []), // Añadir alineación vertical si aplica
-                            ...(withBorders
-                              ? [
-                                  {
-                                    type: 'element',
-                                    name: 'w:tcBorders',
-                                    elements: [
-                                      { name: 'w:top', type: 'element', attributes: { 'w:val': 'single', 'w:sz': '4', 'w:space': '0', 'w:color': 'auto' } },
-                                      { name: 'w:bottom', type: 'element', attributes: { 'w:val': 'single', 'w:sz': '4', 'w:space': '0', 'w:color': 'auto' } },
-                                      { name: 'w:left', type: 'element', attributes: { 'w:val': 'single', 'w:sz': '4', 'w:space': '0', 'w:color': 'auto' } },
-                                      { name: 'w:right', type: 'element', attributes: { 'w:val': 'single', 'w:sz': '4', 'w:space': '0', 'w:color': 'auto' } },
-                                    ],
-                                  },
-                                ]
-                              : []),
+                            ...(textAlignElement ? [textAlignElement] : []),
+                            // Espaciado eliminado
                           ],
                         },
-                        {
-                          type: 'element',
-                          name: 'w:p',
-                          elements: [
-                            {
-                              type: 'element',
-                              name: 'w:pPr', // Propiedades del párrafo
-                              elements: [
-                                ...(textAlignElement ? [textAlignElement] : []), // Añadir alineación horizontal si aplica
+
+                          {
+                            type: 'element',
+                            name: 'w:r',
+                            elements: [
                                 {
-                                  type: 'element',
-                                  name: 'w:spacing',
-                                  attributes: {
-                                    'w:before': '150', // Margen superior
-                                  },
-                                },
-                              ],
-                            },
-                            {
-                              type: 'element',
-                              name: 'w:r',
-                              elements: [
-                                {
-                                  type: 'element',
-                                  name: 'w:rPr',
-                                  elements: [
-                                    ...(textColor
-                                      ? [
-                                          {
+                                    type: 'element',
+                                    name: 'w:rPr',
+                                    elements: [
+                                      {
+                                        type: 'element',
+                                        name: 'w:rFonts',
+                                        attributes: {
+                                          'w:ascii': 'Arial',
+                                          'w:hAnsi': 'Arial',
+                                          'w:eastAsia': 'Arial',
+                                          'w:cs': 'Arial',
+                                        },
+                                      },
+                                      {
+                                        type: 'element',
+                                        name: 'w:sz',
+                                        attributes: { 'w:val': '20' }, // Tamaño 10pt
+                                      },
+                                      ...(textColor
+                                        ? [{
                                             type: 'element',
                                             name: 'w:color',
                                             attributes: { 'w:val': textColor },
-                                          },
-                                        ]
-                                      : []),
-                                    ...(fontStyle
-                                      ? fontStyle.split(' ').map((style) => ({
-                                          type: 'element',
-                                          name: \`w:\${style}\`,
-                                        }))
-                                      : []),
-                                    ...(fontSize
-                                      ? [
-                                          {
+                                          }]
+                                        : []),
+                                      ...(fontStyle
+                                        ? fontStyle.split(' ').map((style) => ({
+                                            type: 'element',
+                                            name: \`w:\${style}\`,
+                                          }))
+                                        : []),
+                                      ...(fontSize
+                                        ? [{
                                             type: 'element',
                                             name: 'w:sz',
                                             attributes: { 'w:val': fontSize.toString() },
-                                          },
-                                        ]
-                                      : []),
-                                  ],
-                                },
-                                ...processTableText(value),
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                    };
-                  }),
-                };
+                                          }]
+                                        : []),
+                                    ],
+                                  },                          
+                              ...processTableText(value),
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  };
+                }),
               };
+            };
 
               const processTableText = (text) => {
                 let newElements = [];
@@ -6617,134 +6619,134 @@ router.post('/save-configuration', async (req, res) => {
                 // Procesar nodos recursivamente para buscar y reemplazar URLs con imágenes
                 const processNodesForImages = async (nodes, parentNode = null) => {
                   for (const node of nodes) {
-                      if (node && typeof node === "object") {
-                          node.parent = parentNode; // Asignar referencia al nodo padre
-                      }
-                      if (parentNode) {
-                      }
-              
-                      if (node.type === "element" && node.name === "w:t" && node.elements) {
-                          const text = node.elements[0]?.text || "";
-              
-                          // Verificar si el nodo está dentro de una celda de tabla
-                          const isInTableCell = findAncestorNode(node, "w:tc");
-                          console.log(\`¿Está dentro de una celda de tabla?: \${isInTableCell}\`);
-              
-                          // Si el texto es una URL de imagen, realizar el reemplazo
-                          if (isImageUrl(text)) {
-                              console.log(\`Se detectó una URL de imagen: \${text}\`);
-                              const imageKey = decodeURIComponent(text.split('.amazonaws.com/')[1]);
-                              console.log("Clave decodificada de la imagen en S3:", imageKey);
-              
-                              // Obtener URL firmada de la imagen
-                              const imageUrl = await getSignedUrl(bucketName, imageKey);
-                              console.log(\`URL firmada para la imagen: \${imageUrl}\`);
-              
-                              // Descargar imagen y obtener sus dimensiones
-                              const response = await fetch(imageUrl);
-                              if (!response.ok) throw new Error(\`Error al descargar la imagen: \${imageUrl}\`);
-                              const imageBuffer = await response.arrayBuffer();
-                              const { width, height } = await sharp(Buffer.from(imageBuffer)).metadata();
-              
-                              // Agregar la imagen al documento
-                              const imageName = \`\${Date.now()}.png\`;
-                              await addImageToDocx(zip, imageUrl, imageName);
-                              console.log(\`Imagen agregada a "word/media/\${imageName}"\`);
-              
-                              // Obtener ancho de la celda si está en tabla, de lo contrario usar default
-                              const aspectRatio = height / width;
-                              const newHeightEMU = Math.round(cellWidthEMU * aspectRatio);
-              
-                              console.log(\`Ajuste de imagen - Ancho: \${cellWidthEMU} EMU, Altura: \${newHeightEMU} EMU\`);
-              
-                              // Generar el ID de la relación para la imagen
-                              const imageId = addImageRelationship(zip, imageName);
-                              console.log("ID de relación generado:", imageId);
-              
-                              // Reemplazar el nodo con la imagen ajustada
-                              node.name = "w:drawing";
-                              node.elements = [
-                                  {
+                    if (node && typeof node === "object") {
+                      node.parent = parentNode;
+                    }
+
+                    if (node.type === "element" && node.name === "w:t" && node.elements) {
+                      const fullText = node.elements
+                        .filter(el => el.type === "text")
+                        .map(el => el.text)
+                        .join("") || "";
+
+                      console.log("Texto encontrado:", fullText);
+
+                      const isInTableCell = findAncestorNode(node, "w:tc");
+                      console.log("¿Está dentro de una celda de tabla?", isInTableCell);
+
+                      if (isImageUrl(fullText)) {
+                        console.log(">> Se detectó una URL de imagen:", fullText);
+                      
+                        try {
+                          // Extraer la clave del archivo en S3 desde la URL
+                          const rawPath = decodeURIComponent(fullText.split(".amazonaws.com/")[1]);
+                          const imageKey = rawPath.split("?")[0]; // eliminar query string
+                          const imageName = imageKey.split("/").pop();
+                      
+                          console.log("Clave decodificada de la imagen:", imageKey);
+                          console.log("Nombre de la imagen:", imageName);
+                      
+                          // Obtener la URL firmada desde la clave
+                          const imageUrl = await getSignedUrl(bucketName, imageKey);
+                          console.log("URL firmada generada:", imageUrl);
+                      
+                          // Descargar la imagen usando la URL firmada
+                          const response = await fetch(imageUrl);
+                          if (!response.ok) throw new Error(\`Error al descargar la imagen: \${imageUrl}\`);
+                          const imageBuffer = await response.arrayBuffer();
+                      
+                          const { width, height } = await sharp(Buffer.from(imageBuffer)).metadata();
+                          console.log("Dimensiones obtenidas:", { width, height });
+                      
+                          await addImageToDocx(zip, imageUrl, imageName);
+                          console.log(\`Imagen agregada a "word/media/\${imageName}"\`);
+                      
+                          const aspectRatio = height / width;
+                          const newHeightEMU = Math.round(cellWidthEMU * aspectRatio);
+                      
+                          const imageId = addImageRelationship(zip, imageName);
+                          console.log("ID de relación generado:", imageId);
+                      
+                          node.name = "w:drawing";
+                          node.elements = [
+                            {
+                              type: "element",
+                              name: "wp:inline",
+                              elements: [
+                                { type: "element", name: "wp:extent", attributes: { cx: cellWidthEMU, cy: newHeightEMU } },
+                                { type: "element", name: "wp:docPr", attributes: { id: imageId.replace("rId", ""), name: \`Picture \${imageName}\` } },
+                                {
+                                  type: "element",
+                                  name: "a:graphic",
+                                  elements: [
+                                    {
                                       type: "element",
-                                      name: "wp:inline",
+                                      name: "a:graphicData",
+                                      attributes: { uri: "http://schemas.openxmlformats.org/drawingml/2006/picture" },
                                       elements: [
-                                          {
+                                        {
+                                          type: "element",
+                                          name: "pic:pic",
+                                          elements: [
+                                            {
                                               type: "element",
-                                              name: "wp:extent",
-                                              attributes: { cx: cellWidthEMU, cy: newHeightEMU },
-                                          },
-                                          {
-                                              type: "element",
-                                              name: "wp:docPr",
-                                              attributes: { id: imageId.replace("rId", ""), name: \`Picture \${imageName}\` },
-                                          },
-                                          {
-                                              type: "element",
-                                              name: "a:graphic",
+                                              name: "pic:nvPicPr",
                                               elements: [
-                                                  {
-                                                      type: "element",
-                                                      name: "a:graphicData",
-                                                      attributes: { uri: "http://schemas.openxmlformats.org/drawingml/2006/picture" },
-                                                      elements: [
-                                                          {
-                                                              type: "element",
-                                                              name: "pic:pic",
-                                                              elements: [
-                                                                  {
-                                                                      type: "element",
-                                                                      name: "pic:nvPicPr",
-                                                                      elements: [
-                                                                          { type: "element", name: "pic:cNvPr", attributes: { id: "0", name: \`Picture \${imageName}\` } },
-                                                                          { type: "element", name: "pic:cNvPicPr" },
-                                                                      ],
-                                                                  },
-                                                                  {
-                                                                      type: "element",
-                                                                      name: "pic:blipFill",
-                                                                      elements: [
-                                                                          { type: "element", name: "a:blip", attributes: { "r:embed": imageId } },
-                                                                          { type: "element", name: "a:stretch", elements: [{ type: "element", name: "a:fillRect" }] },
-                                                                      ],
-                                                                  },
-                                                                  {
-                                                                      type: "element",
-                                                                      name: "pic:spPr",
-                                                                      elements: [
-                                                                          {
-                                                                              type: "element",
-                                                                              name: "a:xfrm",
-                                                                              elements: [
-                                                                                  { type: "element", name: "a:off", attributes: { x: "0", y: "0" } },
-                                                                                  { type: "element", name: "a:ext", attributes: { cx: cellWidthEMU, cy: newHeightEMU } },
-                                                                              ],
-                                                                          },
-                                                                          { type: "element", name: "a:prstGeom", attributes: { prst: "rect" }, elements: [{ type: "element", name: "a:avLst" }] },
-                                                                      ],
-                                                                  },
-                                                              ],
-                                                          },
-                                                      ],
-                                                  },
+                                                { type: "element", name: "pic:cNvPr", attributes: { id: "0", name: \`Picture \${imageName}\` } },
+                                                { type: "element", name: "pic:cNvPicPr" },
                                               ],
-                                          },
+                                            },
+                                            {
+                                              type: "element",
+                                              name: "pic:blipFill",
+                                              elements: [
+                                                { type: "element", name: "a:blip", attributes: { "r:embed": imageId } },
+                                                { type: "element", name: "a:stretch", elements: [{ type: "element", name: "a:fillRect" }] },
+                                              ],
+                                            },
+                                            {
+                                              type: "element",
+                                              name: "pic:spPr",
+                                              elements: [
+                                                {
+                                                  type: "element",
+                                                  name: "a:xfrm",
+                                                  elements: [
+                                                    { type: "element", name: "a:off", attributes: { x: "0", y: "0" } },
+                                                    { type: "element", name: "a:ext", attributes: { cx: cellWidthEMU, cy: newHeightEMU } },
+                                                  ],
+                                                },
+                                                { type: "element", name: "a:prstGeom", attributes: { prst: "rect" }, elements: [{ type: "element", name: "a:avLst" }] },
+                                              ],
+                                            },
+                                          ],
+                                        },
                                       ],
-                                  },
-                              ];
-                              console.log(
-                                  isInTableCell
-                                      ? "La imagen está dentro de una celda de tabla y se ha ajustado."
-                                      : "La imagen está fuera de una tabla y tiene el tamaño por defecto."
-                              );
-                          }
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ];
+                        } catch (err) {
+                          console.error("Error procesando la imagen:", err.message);
+                        }
                       }
-              
-                      // Procesar nodos hijos de forma recursiva
-                      if (node.elements) {
-                          await processNodesForImages(node.elements, node);
+                      else {
+                        console.log(">> No es una URL de imagen válida o no detectada");
                       }
+                    }
+
+                    if (node.elements) {
+                      await processNodesForImages(node.elements, node);
+                    }
                   }
-              };
+                };
+
+
+                function isImageUrl(url) {
+                  return typeof url === "string" && /amazonaws\.com/.test(url);
+                }
 
                 console.log("=== Iniciando proceso de reemplazo de URLs por imágenes ===");
                 // Agregar namespaces necesarios
@@ -6768,11 +6770,97 @@ router.post('/save-configuration', async (req, res) => {
                 zip.file(documentPath, updatedXml);
             };
             
+            const applyArial10ToDocument = (nodes) => {
+              nodes.forEach((node) => {
+                if (node.name === "w:r") {
+                  let rPr = node.elements?.find((el) => el.name === "w:rPr");
+            
+                  if (!rPr) {
+                    rPr = {
+                      type: "element",
+                      name: "w:rPr",
+                      elements: [],
+                    };
+                    node.elements.unshift(rPr); // Insertar al principio
+                  }
+            
+                  // Eliminar fuentes existentes si las hay
+                  rPr.elements = rPr.elements?.filter(
+                    (el) => el.name !== "w:rFonts" && el.name !== "w:sz"
+                  ) || [];
+            
+                  // Agregar fuente Arial y tamaño 10
+                  rPr.elements.unshift(
+                    {
+                      type: "element",
+                      name: "w:rFonts",
+                      attributes: {
+                        "w:ascii": "Arial",
+                        "w:hAnsi": "Arial",
+                        "w:eastAsia": "Arial",
+                        "w:cs": "Arial",
+                      },
+                    },
+                    {
+                      type: "element",
+                      name: "w:sz",
+                      attributes: { "w:val": "20" },
+                    }
+                  );
+                }
+            
+                // Procesar hijos recursivamente
+                if (node.elements && node.elements.length > 0) {
+                  applyArial10ToDocument(node.elements);
+                }
+              });
+            };
+
+            const aplicarInterlineadoSencillo = (nodes) => {
+              nodes.forEach((node) => {
+                if (node.type === 'element' && node.name === 'w:p') {
+                  // Buscar o crear nodo <w:pPr>
+                  let pPr = node.elements?.find((el) => el.name === 'w:pPr');
+                  if (!pPr) {
+                    pPr = { type: 'element', name: 'w:pPr', elements: [] };
+                    node.elements.unshift(pPr); // Insertar al inicio
+                  }
+            
+                  // Buscar si ya existe un nodo de espaciado
+                  let spacing = pPr.elements.find((el) => el.name === 'w:spacing');
+                  if (!spacing) {
+                    spacing = {
+                      type: 'element',
+                      name: 'w:spacing',
+                      attributes: {
+                        'w:line': '240',          // Interlineado sencillo
+                        'w:lineRule': 'auto',
+                      },
+                    };
+                    pPr.elements.push(spacing);
+                  } else {
+                    spacing.attributes['w:line'] = '240';
+                    spacing.attributes['w:lineRule'] = 'auto';
+                  }
+                }
+            
+                // Aplicar recursivamente a hijos
+                if (node.elements && node.elements.length > 0) {
+                  aplicarInterlineadoSencillo(node.elements);
+                }
+              });
+            };  
+            
               // Procesar y reemplazar variables y tablas
               console.log("Procesando documento XML...");
               normalizeTextNodes(parsedXml.elements);
               replaceVariables(parsedXml.elements); // Reemplaza variables
               replaceTableValues(parsedXml.elements, tablas); // Reemplaza valores en tablas
+
+              // Aplicar Arial 10 a todo el contenido
+              applyArial10ToDocument(parsedXml.elements); // 👈 Aquí se aplica la fuente y tamaño
+
+              aplicarInterlineadoSencillo(parsedXml.elements);
 
               // Guardar el documento con las variables y tablas reemplazadas
               let updatedXml = js2xml(parsedXml, { compact: false, spaces: 4 });
