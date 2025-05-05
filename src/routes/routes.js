@@ -16,7 +16,7 @@ const Docxtemplater = require('docxtemplater');
 const mammoth = require('mammoth');
 const vm = require('vm');
 const QRCode = require('qrcode');
-const { uploadFile, getSignedUrl, deleteObject  } = require('../config/s3Service');
+const { uploadFile, getSignedUrl, deleteObject } = require('../config/s3Service');
 const dotenv = require('dotenv');
 const { convertToPDF } = require("../config/convertToPDF");
 const unzipper = require("unzipper");
@@ -150,7 +150,7 @@ async function generateSignedUrl(url) {
     const key = decodeURIComponent(
       urlParts.pathname.startsWith('/') ? urlParts.pathname.substring(1) : urlParts.pathname
     );
-    
+
     const params = {
       Bucket: bucketName,
       Key: key,
@@ -263,9 +263,9 @@ router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
   let imageUrl = null;
   let hashedPassword = null;
   if (password && password.trim() !== '') {
-      hashedPassword = await bcrypt.hash(password, 10);
+    hashedPassword = await bcrypt.hash(password, 10);
   }
-  
+
   try {
     if (req.file) {
       const result = await pool.query('SELECT image FROM users WHERE id = $1', [userId]);
@@ -278,9 +278,9 @@ router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
         console.log(`Imagen anterior eliminada: ${previousKey}`);
       }
 
-      
 
-      
+
+
 
       const bucketName = 'impecol';
       const key = `profile_pictures/${Date.now()}-${req.file.originalname}`;
@@ -305,16 +305,16 @@ router.post('/updateProfile', uploadImage, compressImage, async (req, res) => {
     if (hashedPassword) {
       fields.push(`password = $${index++}`);
       values.push(hashedPassword);
-  }  
+    }
     if (imageUrl) fields.push(`image = $${index++}`) && values.push(imageUrl);
     values.push(userId);
 
     if (fields.length > 0) {
       const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${index}`;
       await pool.query(query, values);
-  } else {
+    } else {
       return res.status(400).json({ message: 'No se enviaron datos para actualizar' });
-  }  
+    }
 
     if (imageUrl) {
       const bucketName = 'impecol';
@@ -449,13 +449,13 @@ router.post('/login', async (req, res) => {
         return res.json({
           success: true,
           message: "Login successful",
-          user: { 
-            id_usuario: client.id, 
-            name: client.name, 
-            email: client.email, 
-            phone: client.phone, 
-            category: client.category ,
-            rol: client.rol, 
+          user: {
+            id_usuario: client.id,
+            name: client.name,
+            email: client.email,
+            phone: client.phone,
+            category: client.category,
+            rol: client.rol,
             image: client.photo
           },
         });
@@ -463,10 +463,10 @@ router.post('/login', async (req, res) => {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
       }
     }
-    
+
     const user = result.rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
-    
+
     if (isMatch) {
       res.json({
         success: true,
@@ -722,9 +722,9 @@ router.post('/clients', async (req, res) => {
 
     let hashedPassword = '';
 
-    if(password){
+    if (password) {
       hashedPassword = await bcrypt.hash(password, 10);
-    } else{
+    } else {
       hashedPassword = await bcrypt.hash('123456', 10);
     }
 
@@ -825,7 +825,7 @@ router.get('/clients/:id', async (req, res) => {
     }
     const client = result.rows[0];
 
-    console.log("foto cliente: ",client.photo);
+    console.log("foto cliente: ", client.photo);
 
     // Generar URL prefirmada si el usuario tiene una imagen válida
     if (client.photo) {
@@ -1051,7 +1051,7 @@ router.post('/services', async (req, res) => {
       });
     }
 
-    if(client_id===created_by){
+    if (client_id === created_by) {
       const notificationMessage = `El servicio solicitado fue aprobado por nuestro equipo, puedes revisar la información y proceder con el agendamiento.`;
       // Notificar al cliente aceptación del servicio
       const notificationQueryClient = `
@@ -1293,49 +1293,49 @@ router.delete('/services/:id', async (req, res) => {
     console.log(`Notificación emitida al responsable ${service.responsible}: ${notificationMessage}`);
 
     // Procesar y notificar a los acompañantes
-// Procesar y notificar a los acompañantes
-let parsedCompanion = [];
-try {
-  if (typeof service.companion === 'string') {
-    if (service.companion.startsWith('{') && service.companion.endsWith('}')) {
-      // Intenta interpretar el string como JSON y extraer los valores
-      const fixedCompanion = service.companion
-        .replace(/'/g, '"') // Reemplaza comillas simples por dobles
-        .replace(/^{|}$/g, '') // Elimina las llaves inicial y final
-        .split(',') // Divide por comas si hay múltiples valores
-        .map(id => id.trim().replace(/"/g, '')); // Limpia comillas alrededor de los valores
-      parsedCompanion = fixedCompanion;
-    } else if (service.companion.includes(',')) {
-      // Es una lista separada por comas
-      parsedCompanion = service.companion.split(',').map(id => id.trim());
-    } else {
-      // Es un único ID en formato string
-      parsedCompanion = [service.companion];
+    // Procesar y notificar a los acompañantes
+    let parsedCompanion = [];
+    try {
+      if (typeof service.companion === 'string') {
+        if (service.companion.startsWith('{') && service.companion.endsWith('}')) {
+          // Intenta interpretar el string como JSON y extraer los valores
+          const fixedCompanion = service.companion
+            .replace(/'/g, '"') // Reemplaza comillas simples por dobles
+            .replace(/^{|}$/g, '') // Elimina las llaves inicial y final
+            .split(',') // Divide por comas si hay múltiples valores
+            .map(id => id.trim().replace(/"/g, '')); // Limpia comillas alrededor de los valores
+          parsedCompanion = fixedCompanion;
+        } else if (service.companion.includes(',')) {
+          // Es una lista separada por comas
+          parsedCompanion = service.companion.split(',').map(id => id.trim());
+        } else {
+          // Es un único ID en formato string
+          parsedCompanion = [service.companion];
+        }
+      } else if (Array.isArray(service.companion)) {
+        // Es un array directamente
+        parsedCompanion = service.companion.map(id => id.toString());
+      }
+    } catch (parseError) {
+      console.error(`Error procesando acompañantes: ${parseError.message}`);
     }
-  } else if (Array.isArray(service.companion)) {
-    // Es un array directamente
-    parsedCompanion = service.companion.map(id => id.toString());
-  }
-} catch (parseError) {
-  console.error(`Error procesando acompañantes: ${parseError.message}`);
-}
 
-console.log(`Acompañantes procesados: ${JSON.stringify(parsedCompanion)}`);
+    console.log(`Acompañantes procesados: ${JSON.stringify(parsedCompanion)}`);
 
-for (let companionId of parsedCompanion) {
-  try {
-    const companionNotificationValues = [companionId, notificationMessage, 'pending'];
-    const companionNotificationResult = await pool.query(notificationQuery, companionNotificationValues);
+    for (let companionId of parsedCompanion) {
+      try {
+        const companionNotificationValues = [companionId, notificationMessage, 'pending'];
+        const companionNotificationResult = await pool.query(notificationQuery, companionNotificationValues);
 
-    req.io.to(companionId.toString()).emit('notification', {
-      user_id: companionId,
-      notification: companionNotificationResult.rows[0],
-    });
-    console.log(`Notificación emitida al acompañante ${companionId}: ${notificationMessage}`);
-  } catch (companionError) {
-    console.error(`Error notificando al acompañante ${companionId}: ${companionError.message}`);
-  }
-}
+        req.io.to(companionId.toString()).emit('notification', {
+          user_id: companionId,
+          notification: companionNotificationResult.rows[0],
+        });
+        console.log(`Notificación emitida al acompañante ${companionId}: ${notificationMessage}`);
+      } catch (companionError) {
+        console.error(`Error notificando al acompañante ${companionId}: ${companionError.message}`);
+      }
+    }
 
     res.json({ success: true, message: "Service, related inspections, and service schedule entries deleted successfully" });
   } catch (error) {
@@ -1347,12 +1347,12 @@ for (let companionId of parsedCompanion) {
 const productsStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, '..', 'uploads');
-    
+
     // Verificar si la carpeta existe, si no, crearla
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
-    
+
     cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
@@ -1402,7 +1402,7 @@ router.post('/products', uploadProductFiles, async (req, res) => {
     active_ingredient,
     category,
     health_record // ✅ Agregado aquí
-  } = req.body;  
+  } = req.body;
 
   console.log('Categorías recibidas:', category);
 
@@ -1461,8 +1461,8 @@ router.post('/products', uploadProductFiles, async (req, res) => {
       health_registration,
       emergency_card
     ) VALUES ($1, $2, $3, $4, $5, TO_DATE($6, 'YYYY-MM-DD'), $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *
-    `;    
-    
+    `;
+
     const values = [
       name,
       description_type,
@@ -1478,7 +1478,7 @@ router.post('/products', uploadProductFiles, async (req, res) => {
       fileUrls.technical_sheet || null,
       fileUrls.health_registration || null,
       fileUrls.emergency_card || null
-    ];            
+    ];
 
     const result = await pool.query(query, values);
 
@@ -1541,8 +1541,8 @@ router.put('/products/:id', uploadProductFiles, async (req, res) => {
     active_ingredient,
     category,
     health_record // ✅ Agregado aquí
-  } = req.body;  
-  
+  } = req.body;
+
   console.log("Datos recibidos en la actualización:", req.body); // Debug para verificar datos  
 
   console.log('Categorías recibidas:', category);
@@ -1606,7 +1606,7 @@ router.put('/products/:id', uploadProductFiles, async (req, res) => {
         health_registration = COALESCE($13, health_registration),
         emergency_card = COALESCE($14, emergency_card)
     WHERE id = $15 RETURNING *
-    `;    
+    `;
 
     const values = [
       name,
@@ -1624,7 +1624,7 @@ router.put('/products/:id', uploadProductFiles, async (req, res) => {
       fileUrls.health_registration || null,
       fileUrls.emergency_card || null,
       id
-    ];       
+    ];
 
     const result = await pool.query(query, values);
 
@@ -1783,11 +1783,11 @@ router.post('/request-services', async (req, res) => {
       FROM clients
       WHERE id = $1;
     `;
-    const clientResult = await pool.query(nameClientQuery, [client_id]);
+  const clientResult = await pool.query(nameClientQuery, [client_id]);
 
-    const clientName = clientResult.rows[0]?.name;
+  const clientName = clientResult.rows[0]?.name;
 
-    console.log(clientResult.rows[0])
+  console.log(clientResult.rows[0])
 
   try {
     // Crear el mensaje de notificación
@@ -1860,17 +1860,17 @@ router.post('/request-schedule', async (req, res) => {
       FROM clients
       WHERE id = $1;
     `;
-    const clientResult = await pool.query(nameClientQuery, [clientId]);
+  const clientResult = await pool.query(nameClientQuery, [clientId]);
 
-    const clientName = clientResult.rows[0]?.name;
+  const clientName = clientResult.rows[0]?.name;
 
-    console.log(clientResult.rows[0])
+  console.log(clientResult.rows[0])
 
   try {
     // Crear el mensaje de notificación
     const notificationMessage = `El cliente ${clientName} solicitó agendamiento para el servicio ${serviceId}.`;
     const route = `/services-calendar?serviceId=${serviceId}`;
-    
+
     // Obtener usuarios con roles permitidos (Superadministrador, Administrador, Supervisor Técnico)
     const allowedRoles = ['Superadministrador', 'Administrador', 'Supervisor Técnico'];
     const roleQuery = `
@@ -1991,92 +1991,92 @@ router.post("/replace-google-drive-url", async (req, res) => {
   const { googleDriveId, generatedDocumentId } = req.body;
 
   try {
-      // Validar parámetros
-      if (!googleDriveId || !generatedDocumentId) {
-          return res.status(400).json({
-              success: false,
-              message: "Los parámetros 'googleDriveId' y 'generatedDocumentId' son obligatorios.",
-          });
-      }
+    // Validar parámetros
+    if (!googleDriveId || !generatedDocumentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Los parámetros 'googleDriveId' y 'generatedDocumentId' son obligatorios.",
+      });
+    }
 
-      // Obtener la URL actual del documento desde la base de datos
-      const fetchQuery = `
+    // Obtener la URL actual del documento desde la base de datos
+    const fetchQuery = `
           SELECT document_url FROM generated_documents WHERE id = $1;
       `;
-      const fetchResult = await pool.query(fetchQuery, [generatedDocumentId]);
+    const fetchResult = await pool.query(fetchQuery, [generatedDocumentId]);
 
-      if (fetchResult.rowCount === 0) {
-          return res.status(404).json({
-              success: false,
-              message: "No se encontró el documento en la base de datos.",
-          });
+    if (fetchResult.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No se encontró el documento en la base de datos.",
+      });
+    }
+
+    const oldDocumentUrl = fetchResult.rows[0].document_url;
+
+    // Llamar a la Web App de Apps Script para obtener el archivo de Google Drive
+    const appsScriptUrl =
+      "https://script.google.com/macros/s/AKfycbyHZvRQT03xTD1tL-LM2YGXY72c-funS0wAkuiD4hZqD-foAAyuCQacImL_SbPlKFvH/exec";
+    const response = await axios.post(appsScriptUrl, { fileId: googleDriveId });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || "Error al obtener el archivo de Google Drive.");
+    }
+
+    const { fileData, fileName, mimeType } = response.data;
+
+    // Decodificar el archivo desde Base64
+    const fileBuffer = Buffer.from(fileData, "base64");
+    const newKey = `documents/generated/${Date.now()}-generated.docx`;
+    const uploadResult = await uploadFile(bucketName, newKey, fileBuffer);
+
+    console.log("Archivo subido con éxito a S3:", uploadResult.Location);
+    const documentUrl = uploadResult.Location;
+
+    // Eliminar el archivo anterior de S3
+    if (oldDocumentUrl) {
+      const oldKey = oldDocumentUrl.split(`impecol.s3.us-east-2.amazonaws.com/`)[1];
+      if (!oldKey.startsWith('documents/')) {
+        console.error('La clave del archivo no es válida:', oldKey);
+        throw new Error('Clave del archivo no válida para eliminar.');
       }
 
-      const oldDocumentUrl = fetchResult.rows[0].document_url;
 
-      // Llamar a la Web App de Apps Script para obtener el archivo de Google Drive
-      const appsScriptUrl =
-          "https://script.google.com/macros/s/AKfycbyHZvRQT03xTD1tL-LM2YGXY72c-funS0wAkuiD4hZqD-foAAyuCQacImL_SbPlKFvH/exec";
-      const response = await axios.post(appsScriptUrl, { fileId: googleDriveId });
-
-      if (!response.data.success) {
-          throw new Error(response.data.message || "Error al obtener el archivo de Google Drive.");
+      if (oldKey) {
+        await deleteObject(bucketName, oldKey);
+        console.log(`Archivo anterior eliminado correctamente de S3: ${oldKey}`);
+      } else {
+        console.warn("No se pudo generar la clave del archivo anterior.");
       }
+    }
 
-      const { fileData, fileName, mimeType } = response.data;
-
-      // Decodificar el archivo desde Base64
-      const fileBuffer = Buffer.from(fileData, "base64");
-      const newKey = `documents/generated/${Date.now()}-generated.docx`;
-      const uploadResult = await uploadFile(bucketName, newKey, fileBuffer);
-
-      console.log("Archivo subido con éxito a S3:", uploadResult.Location);
-      const documentUrl = uploadResult.Location;
-
-      // Eliminar el archivo anterior de S3
-      if (oldDocumentUrl) {
-        const oldKey = oldDocumentUrl.split(`impecol.s3.us-east-2.amazonaws.com/`)[1];
-        if (!oldKey.startsWith('documents/')) {
-            console.error('La clave del archivo no es válida:', oldKey);
-            throw new Error('Clave del archivo no válida para eliminar.');
-        }
-        
-
-          if (oldKey) {
-              await deleteObject(bucketName, oldKey);
-              console.log(`Archivo anterior eliminado correctamente de S3: ${oldKey}`);
-          } else {
-              console.warn("No se pudo generar la clave del archivo anterior.");
-          }
-      }
-
-      // Actualizar la URL en la base de datos
-      const updateQuery = `
+    // Actualizar la URL en la base de datos
+    const updateQuery = `
           UPDATE generated_documents
           SET document_url = $1
           WHERE id = $2
           RETURNING *;
       `;
-      const updateValues = [documentUrl, generatedDocumentId];
-      const result = await pool.query(updateQuery, updateValues);
+    const updateValues = [documentUrl, generatedDocumentId];
+    const result = await pool.query(updateQuery, updateValues);
 
-      if (result.rowCount === 0) {
-          throw new Error("No se encontró el registro en la base de datos para actualizar.");
-      }
+    if (result.rowCount === 0) {
+      throw new Error("No se encontró el registro en la base de datos para actualizar.");
+    }
 
-      res.json({
-          success: true,
-          message: "El archivo fue procesado exitosamente.",
-          documentUrl,
-          updatedDocument: result.rows[0],
-      });
+    res.json({
+      success: true,
+      message: "El archivo fue procesado exitosamente.",
+      documentUrl,
+      updatedDocument: result.rows[0],
+    });
   } catch (error) {
-      console.error("Error al procesar el archivo:", error.message);
-      res.status(500).json({
-          success: false,
-          message: "Error en el servidor.",
-          error: error.message,
-      });
+    console.error("Error al procesar el archivo:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor.",
+      error: error.message,
+    });
   }
 });
 
@@ -2261,20 +2261,20 @@ router.post("/convert-to-pdf", async (req, res) => {
     console.log("Descargando archivo DOCX desde S3...");
     const response = await axios.get(signedUrl, { responseType: "arraybuffer" });
 
-      // Definir la ruta temporal para el archivo DOCX
-      const docxPath = path.join(tempDirectory, `${Date.now()}-document.docx`);
-      console.log("Ruta temporal para el archivo DOCX:", docxPath);
+    // Definir la ruta temporal para el archivo DOCX
+    const docxPath = path.join(tempDirectory, `${Date.now()}-document.docx`);
+    console.log("Ruta temporal para el archivo DOCX:", docxPath);
 
-      // 🟢 Asegurar carpeta aquí
-      const tempDir = path.dirname(docxPath);
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir, { recursive: true });
-        console.log(`Carpeta creada: ${tempDir}`);
-      }
+    // 🟢 Asegurar carpeta aquí
+    const tempDir = path.dirname(docxPath);
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+      console.log(`Carpeta creada: ${tempDir}`);
+    }
 
-      // Guardar el archivo DOCX temporalmente
-      fs.writeFileSync(docxPath, response.data);
-      console.log("Archivo DOCX descargado y guardado temporalmente.");
+    // Guardar el archivo DOCX temporalmente
+    fs.writeFileSync(docxPath, response.data);
+    console.log("Archivo DOCX descargado y guardado temporalmente.");
 
     // Convertir el archivo DOCX a PDF usando `convertToPDF`
     console.log("Iniciando conversión a PDF con OnlyOffice...");
@@ -2590,7 +2590,7 @@ router.get('/service-schedule', async (req, res) => {
     `;
 
     const result = await pool.query(query, [mm, yyyy]);
-    
+
     res.json(result.rows);
   } catch (error) {
     console.error("Error al obtener los registros:", error);
@@ -2672,12 +2672,12 @@ router.post('/service-schedule', async (req, res) => {
       ORDER BY created_at DESC
       LIMIT 1
     `, [responsible]);
-    
-    const apiConfig = apiQuery.rows[0];    
+
+    const apiConfig = apiQuery.rows[0];
 
     if (apiConfig) {
       const apiPayload = JSON.parse(apiConfig.api_endpoint);
-    
+
       const replacements = {
         title,
         description,
@@ -2691,7 +2691,7 @@ router.post('/service-schedule', async (req, res) => {
         action: "create",
         company_id: client_id // o reemplaza por company_id si lo tienes
       };
-    
+
       const applyReplacements = (obj, values) => {
         const stringified = JSON.stringify(obj);
         const replaced = stringified.replace(/{{(.*?)}}/g, (_, key) => {
@@ -2699,7 +2699,7 @@ router.post('/service-schedule', async (req, res) => {
         });
         return JSON.parse(replaced);
       };
-    
+
       const finalHeaders = applyReplacements(apiPayload.headers, replacements);
       const finalBody = applyReplacements(apiPayload.body, replacements);
 
@@ -2708,7 +2708,7 @@ router.post('/service-schedule', async (req, res) => {
       console.log("📬 URL:", apiPayload.url);
       console.log("📨 Headers:", finalHeaders);
       console.log("📝 Body:", finalBody);
-    
+
       try {
         const axios = require('axios');
         const botixResponse = await axios({
@@ -2734,10 +2734,10 @@ router.post('/service-schedule', async (req, res) => {
         console.log("✅ Evento sincronizado con Botix:");
         console.log("📨 Response status:", botixResponse.status);
         console.log("📩 Response data:", botixResponse.data);
-      
+
       } catch (syncError) {
         console.error("❌ Error sincronizando con Botix:");
-        
+
         if (syncError.response) {
           console.error("🔻 Status:", syncError.response.status);
           console.error("🔻 Data:", syncError.response.data);
@@ -2747,7 +2747,7 @@ router.post('/service-schedule', async (req, res) => {
           console.error("🔻 Error al configurar la solicitud:", syncError.message);
         }
       }
-    }    
+    }
 
     // Emitir evento al responsable asignado
     req.io.to(responsible.toString()).emit('newEvent', newEvent);
@@ -2987,7 +2987,7 @@ router.put('/service-schedule/:id', async (req, res) => {
     if (companion) {
       console.log("Procesando acompañantes:", companion);
 
-       // Aseguramos la inicialización
+      // Aseguramos la inicialización
       try {
         // Validar y procesar la lista de acompañantes
         if (Array.isArray(companion)) {
@@ -3045,14 +3045,14 @@ router.put('/service-schedule/:id', async (req, res) => {
 
     const uniqueUserIds = new Set([...roleUsers, responsible, ...parsedCompanion]);
     console.log("Usuarios únicos para notificación:", Array.from(uniqueUserIds));
-    
+
     for (let userId of uniqueUserIds) {
       try {
         const roleNotificationValues = [userId, notificationMessage, 'pending'];
         const roleNotificationResult = await pool.query(notificationQuery, roleNotificationValues);
-    
+
         console.log(`Notificación guardada para el usuario ${userId}:`, roleNotificationResult.rows[0]);
-    
+
         req.io.to(userId.toString()).emit('notification', {
           user_id: userId,
           notification: roleNotificationResult.rows[0],
@@ -3062,11 +3062,11 @@ router.put('/service-schedule/:id', async (req, res) => {
           } else {
             console.warn(`El evento no fue recibido por el usuario ${userId}`);
           }
-        });        
+        });
       } catch (error) {
         console.error(`Error al notificar al usuario ${userId}:`, error.message);
       }
-    }    
+    }
 
     res.json({ success: true, message: "Registro actualizado con éxito", data: result.rows[0] });
   } catch (error) {
@@ -3195,49 +3195,49 @@ router.delete('/service-schedule/:id', async (req, res) => {
     });
 
     // Notificaciones a acompañantes
-// Notificaciones a acompañantes
-let parsedCompanion = [];
-try {
-  if (typeof companion === 'string') {
-    // Intenta analizar como JSON o procesar cadenas separadas por comas
+    // Notificaciones a acompañantes
+    let parsedCompanion = [];
     try {
-      parsedCompanion = JSON.parse(companion);
-    } catch (jsonError) {
-      // Si no es JSON, trata como una cadena separada por comas
-      parsedCompanion = companion.replace(/{|}/g, '').split(',').map(id => id.trim().replace(/"/g, ''));
+      if (typeof companion === 'string') {
+        // Intenta analizar como JSON o procesar cadenas separadas por comas
+        try {
+          parsedCompanion = JSON.parse(companion);
+        } catch (jsonError) {
+          // Si no es JSON, trata como una cadena separada por comas
+          parsedCompanion = companion.replace(/{|}/g, '').split(',').map(id => id.trim().replace(/"/g, ''));
+        }
+      } else if (Array.isArray(companion)) {
+        // Si ya es un arreglo, úsalo directamente
+        parsedCompanion = companion;
+      } else if (typeof companion === 'object' && companion !== null) {
+        // Si es un objeto, convierte sus valores en un arreglo
+        parsedCompanion = Object.values(companion);
+      } else if (companion) {
+        // Manejo adicional si es un formato inesperado
+        parsedCompanion = companion.toString().replace(/{|}/g, '').split(',').map(id => id.trim().replace(/"/g, ''));
+      }
+
+      // Validar que el resultado sea un arreglo
+      if (!Array.isArray(parsedCompanion)) {
+        throw new TypeError('El valor procesado no es un arreglo válido');
+      }
+    } catch (error) {
+      console.error("Error al procesar companion:", error.message);
+      parsedCompanion = []; // Asegurar un valor predeterminado
     }
-  } else if (Array.isArray(companion)) {
-    // Si ya es un arreglo, úsalo directamente
-    parsedCompanion = companion;
-  } else if (typeof companion === 'object' && companion !== null) {
-    // Si es un objeto, convierte sus valores en un arreglo
-    parsedCompanion = Object.values(companion);
-  } else if (companion) {
-    // Manejo adicional si es un formato inesperado
-    parsedCompanion = companion.toString().replace(/{|}/g, '').split(',').map(id => id.trim().replace(/"/g, ''));
-  }
 
-  // Validar que el resultado sea un arreglo
-  if (!Array.isArray(parsedCompanion)) {
-    throw new TypeError('El valor procesado no es un arreglo válido');
-  }
-} catch (error) {
-  console.error("Error al procesar companion:", error.message);
-  parsedCompanion = []; // Asegurar un valor predeterminado
-}
+    // Iterar y notificar a los acompañantes
+    for (let companionId of parsedCompanion) {
+      companionId = companionId.trim().replace(/"/g, '');
 
-// Iterar y notificar a los acompañantes
-for (let companionId of parsedCompanion) {
-  companionId = companionId.trim().replace(/"/g, '');
+      const companionNotificationValues = [companionId, notificationMessage, 'pending'];
+      const companionNotificationResult = await pool.query(notificationQuery, companionNotificationValues);
 
-  const companionNotificationValues = [companionId, notificationMessage, 'pending'];
-  const companionNotificationResult = await pool.query(notificationQuery, companionNotificationValues);
-
-  req.io.to(companionId.toString()).emit('notification', {
-    user_id: companionId,
-    notification: companionNotificationResult.rows[0],
-  });
-}
+      req.io.to(companionId.toString()).emit('notification', {
+        user_id: companionId,
+        notification: companionNotificationResult.rows[0],
+      });
+    }
 
     res.json({ success: true, message: "Registro eliminado con éxito", data: result.rows[0] });
   } catch (error) {
@@ -3479,7 +3479,7 @@ const uploadInspectionImages = multer({
 router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (req, res) => {
   try {
     const { inspectionId } = req.params;
-    const { generalObservations, findingsByType, productsByType, stationsFindings, signatures, userId, exitTime} = req.body;
+    const { generalObservations, findingsByType, productsByType, stationsFindings, signatures, userId, exitTime } = req.body;
 
     console.log('Datos recibidos en el body:', {
       generalObservations,
@@ -3498,8 +3498,8 @@ router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (re
     const parsedSignatures =
       typeof signatures === 'string' ? JSON.parse(signatures) : signatures;
 
-      console.log('findingsByType parseado:', JSON.stringify(parsedFindingsByType, null, 2));
-      console.log('stationsFindings parseado:', JSON.stringify(parsedStationsFindings, null, 2));  
+    console.log('findingsByType parseado:', JSON.stringify(parsedFindingsByType, null, 2));
+    console.log('stationsFindings parseado:', JSON.stringify(parsedStationsFindings, null, 2));
 
     // Procesar imágenes recibidas (igual que antes)
     const bucketName = 'impecol'; // Define el bucket
@@ -3510,76 +3510,76 @@ router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (re
         files.map(async (file) => {
           // Log del nombre del archivo antes de procesar
           console.log(`Procesando archivo: ${file.originalname}`);
-    
+
           // Extraer el ID del nombre del archivo (ej: "1737653406745.jpg" o "1737653406745-nombre.jpg")
           const idMatch = file.originalname.match(/^(\d+)/); // Busca un número al inicio del nombre
           const id = idMatch ? idMatch[1] : null;
-    
+
           // Log para verificar el ID extraído
           console.log(`ID extraído del archivo ${file.originalname}: ${id}`);
-    
+
           const key = `${folder}/${Date.now()}-${file.originalname}`;
           const result = await uploadFile(bucketName, key, file.buffer);
-    
+
           // Log del resultado del upload
           console.log(`Archivo subido a S3: ${result.Location}, ID: ${id}`);
-    
+
           return {
             id, // ID extraído
             location: result.Location, // URL pública generada por S3
           };
         })
       );
-    };    
-    
-// Subir la firma del técnico a S3 o usar la existente
-const techSignature = req.files.tech_signature
-  ? (await uploadImagesToS3(req.files.tech_signature, 'signatures'))[0]
-  : parsedSignatures?.technician?.signature;
+    };
 
-// Subir la firma del cliente a S3 o usar la existente
-const clientSignature = req.files.client_signature
-  ? (await uploadImagesToS3(req.files.client_signature, 'signatures'))[0]
-  : parsedSignatures?.client?.signature;
+    // Subir la firma del técnico a S3 o usar la existente
+    const techSignature = req.files.tech_signature
+      ? (await uploadImagesToS3(req.files.tech_signature, 'signatures'))[0]
+      : parsedSignatures?.technician?.signature;
 
-  // Log para verificar el resultado de las firmas
-console.log('Firmas procesadas:', {
-  techSignature,
-  clientSignature,
-});
+    // Subir la firma del cliente a S3 o usar la existente
+    const clientSignature = req.files.client_signature
+      ? (await uploadImagesToS3(req.files.client_signature, 'signatures'))[0]
+      : parsedSignatures?.client?.signature;
 
-// Subir imágenes de hallazgos a S3
-const findingsImagePaths = req.files.findingsImages
-  ? await uploadImagesToS3(req.files.findingsImages, 'findings')
-  : [];
+    // Log para verificar el resultado de las firmas
+    console.log('Firmas procesadas:', {
+      techSignature,
+      clientSignature,
+    });
 
-// Crear un mapa de imágenes por ID
-const findingsImagesById = findingsImagePaths.reduce((map, { id, location }) => {
-  if (id) map[id] = location; // Asociar el ID con la URL pública
-  return map;
-}, {});
+    // Subir imágenes de hallazgos a S3
+    const findingsImagePaths = req.files.findingsImages
+      ? await uploadImagesToS3(req.files.findingsImages, 'findings')
+      : [];
 
-// Subir imágenes de estaciones a S3
-const stationImagePaths = req.files.stationImages
-  ? await uploadImagesToS3(req.files.stationImages, 'stations')
-  : [];
+    // Crear un mapa de imágenes por ID
+    const findingsImagesById = findingsImagePaths.reduce((map, { id, location }) => {
+      if (id) map[id] = location; // Asociar el ID con la URL pública
+      return map;
+    }, {});
 
-// Crear un mapa de imágenes por ID
-const stationImagesById = stationImagePaths.reduce((map, { id, location }) => {
-  if (id) map[id] = location; // Asociar el ID con la URL pública
-  return map;
-}, {});
+    // Subir imágenes de estaciones a S3
+    const stationImagePaths = req.files.stationImages
+      ? await uploadImagesToS3(req.files.stationImages, 'stations')
+      : [];
 
-// Subir imágenes genéricas a S3
-const genericImagePaths = req.files.images
-  ? await uploadImagesToS3(req.files.images, 'generic')
-  : [];
+    // Crear un mapa de imágenes por ID
+    const stationImagesById = stationImagePaths.reduce((map, { id, location }) => {
+      if (id) map[id] = location; // Asociar el ID con la URL pública
+      return map;
+    }, {});
 
-  console.log('Rutas de imágenes procesadas:', {
-    findingsImagePaths,
-    stationImagePaths,
-    genericImagePaths, // Mostrar las imágenes genéricas procesadas
-  });
+    // Subir imágenes genéricas a S3
+    const genericImagePaths = req.files.images
+      ? await uploadImagesToS3(req.files.images, 'generic')
+      : [];
+
+    console.log('Rutas de imágenes procesadas:', {
+      findingsImagePaths,
+      stationImagePaths,
+      genericImagePaths, // Mostrar las imágenes genéricas procesadas
+    });
 
     // Reconstruir el objeto signatures
     const updatedSignatures = {
@@ -3597,26 +3597,26 @@ const genericImagePaths = req.files.images
       },
     };
 
-        // Asociar imágenes a `findingsByType`
-        Object.keys(parsedFindingsByType).forEach((type) => {
-          parsedFindingsByType[type] = parsedFindingsByType[type].map((finding) => {
-            // Asocia la imagen correspondiente al ID del hallazgo
-            if (findingsImagesById[finding.id]) {
-              finding.photo = findingsImagesById[finding.id];
-            }
-            return finding;
-          });
-        });
-        
-    
-        // Asociar imágenes a `stationsFindings`
-        parsedStationsFindings.forEach((finding) => {
-          // Asocia la imagen correspondiente al ID de la estación
-          if (stationImagesById[finding.stationId]) {
-            finding.photo = stationImagesById[finding.stationId];
-          }
-        });
-            
+    // Asociar imágenes a `findingsByType`
+    Object.keys(parsedFindingsByType).forEach((type) => {
+      parsedFindingsByType[type] = parsedFindingsByType[type].map((finding) => {
+        // Asocia la imagen correspondiente al ID del hallazgo
+        if (findingsImagesById[finding.id]) {
+          finding.photo = findingsImagesById[finding.id];
+        }
+        return finding;
+      });
+    });
+
+
+    // Asociar imágenes a `stationsFindings`
+    parsedStationsFindings.forEach((finding) => {
+      // Asocia la imagen correspondiente al ID de la estación
+      if (stationImagesById[finding.stationId]) {
+        finding.photo = stationImagesById[finding.stationId];
+      }
+    });
+
 
     // Construir el objeto final de datos
     const findingsData = {
@@ -3667,9 +3667,9 @@ const genericImagePaths = req.files.images
     }
 
     const updatedInspection = result.rows[0];
-    
+
     console.log('Datos guardados en la base de datos:', updatedInspection);
-    
+
     // Obtener el nombre del responsable, ya sea usuario o cliente
     const getResponsibleName = async (userId) => {
       // Consultar en la tabla de usuarios
@@ -3721,7 +3721,7 @@ const genericImagePaths = req.files.images
       notificationMessage = `El cliente ${responsibleName} ha realizado un hallazgo en la inspección ${inspectionId} a las ${exitTime}.`;
     }
 
-    console.log(`Mensaje de notificación: ${notificationMessage}`);    
+    console.log(`Mensaje de notificación: ${notificationMessage}`);
 
     // Notificar a usuarios con roles permitidos
     const allowedRoles = ['superadministrador', 'administrador', 'supervisor técnico'];
@@ -3779,7 +3779,7 @@ const genericImagePaths = req.files.images
 
     const signedFindingsImages = await generateSignedUrls(findingsImageUrls);
     const signedStationImages = await generateSignedUrls(stationImageUrls);
-    const signedGenericImages = await generateSignedUrls(genericImageUrls);  
+    const signedGenericImages = await generateSignedUrls(genericImageUrls);
 
     // Respuesta exitosa al cliente
     res.status(200).json({
@@ -3793,7 +3793,7 @@ const genericImagePaths = req.files.images
         stationImages: signedStationImages,
         genericImages: signedGenericImages,
       },
-    });    
+    });
   } catch (error) {
     console.error('Error al guardar la inspección:', error);
     res.status(500).json({ success: false, message: 'Error al guardar la inspección' });
@@ -7097,10 +7097,10 @@ router.post('/create-document-client', async (req, res) => {
       moment,
       axios,
       process: { env: process.env },
-    };    
+    };
 
-     // Crear un script envolviendo el código generado en una función `async`
-     const script = new vm.Script(`
+    // Crear un script envolviendo el código generado en una función `async`
+    const script = new vm.Script(`
       (async () => {
         ${generated_code}
         return await createDocument_clients(idEntity);
@@ -7162,10 +7162,10 @@ router.post('/create-document-service', async (req, res) => {
       moment,
       axios,
       process: { env: process.env },
-    };    
+    };
 
-     // Crear un script envolviendo el código generado en una función `async`
-     const script = new vm.Script(`
+    // Crear un script envolviendo el código generado en una función `async`
+    const script = new vm.Script(`
       (async () => {
         ${generated_code}
         return await createDocument_services(idEntity);
@@ -7229,18 +7229,18 @@ router.post('/create-document-inspeccion', async (req, res) => {
       moment,
       axios,
       process: { env: process.env },
-    };    
+    };
 
-     // Crear un script envolviendo el código generado en una función `async`
-     const script = new vm.Script(`
+    // Crear un script envolviendo el código generado en una función `async`
+    const script = new vm.Script(`
       (async () => {
         ${generated_code}
         return await createDocument_inspections(idEntity);
       })();
     `);
-    
+
     const context = vm.createContext(sandbox);
-    
+
     // Ejecutar el script una sola vez
     const documentUrl = await script.runInContext(context);
 
@@ -7252,19 +7252,19 @@ router.post('/create-document-inspeccion', async (req, res) => {
 
     console.log("URL prefirmada obtenida:", signedUrl);
 
-    res.status(200).json({ 
-      message: "Código ejecutado correctamente.", 
-      executed: true, 
+    res.status(200).json({
+      message: "Código ejecutado correctamente.",
+      executed: true,
       success: true,
       documentUrl,
       signedUrl
     });
   } catch (error) {
     console.error("Error al ejecutar el código generado:", error.message);
-    res.status(500).json({ 
-      message: "Error interno del servidor", 
-      error: error.message, 
-      success: false 
+    res.status(500).json({
+      message: "Error interno del servidor",
+      error: error.message,
+      success: false
     });
   }
 });
@@ -7932,8 +7932,8 @@ router.post("/extract-odt-data", upload.single("file"), async (req, res) => {
     res.json({ html, variables, tables });
 
     // 4. Limpieza
-    try { fs.unlinkSync(inputPath); } catch (_) {}
-    if (isDocx) try { fs.unlinkSync(odtPath); } catch (_) {}
+    try { fs.unlinkSync(inputPath); } catch (_) { }
+    if (isDocx) try { fs.unlinkSync(odtPath); } catch (_) { }
 
   } catch (error) {
     console.error("❌ Error al procesar ODT:", error);
@@ -8024,8 +8024,8 @@ td, th {
     res.send(htmlContent);
 
     // 6. Limpieza
-    try { fs.unlinkSync(inputPath); } catch (_) {}
-    try { fs.unlinkSync(htmlPath); } catch (_) {}
+    try { fs.unlinkSync(inputPath); } catch (_) { }
+    try { fs.unlinkSync(htmlPath); } catch (_) { }
 
   } catch (error) {
     console.error("❌ Error al generar vista previa HTML:", error);
@@ -8060,7 +8060,7 @@ router.post('/get-onlyoffice-config', upload.single('file'), async (req, res) =>
     console.log('🧾 Tipo MIME:', file.mimetype);
     console.log('📍 Ruta local:', file.path);
 
-    const publicUrl = `http://host.docker.internal:10000/temp/${file.filename}`;
+    const publicUrl = `https://services.impecol.com:10000/temp/${file.filename}`;
     console.log('🌐 URL accesible desde OnlyOffice:', publicUrl);
 
     const config = {
