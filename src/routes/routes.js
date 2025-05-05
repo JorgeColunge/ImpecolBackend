@@ -8072,7 +8072,7 @@ router.post('/get-onlyoffice-config', upload.single('file'), async (req, res) =>
     console.log('🧾 Tipo MIME:', file.mimetype);
     console.log('📍 Ruta local:', file.path);
     //http://host.docker.internal:10000
-    const publicUrl = `http://172.22.0.2/temp/${file.filename}`;
+    const publicUrl = `https://services.impecol.com:10000/temp/${file.filename}`;
     console.log('🌐 URL accesible desde OnlyOffice:', publicUrl);
 
     const config = {
@@ -8095,6 +8095,7 @@ router.post('/get-onlyoffice-config', upload.single('file'), async (req, res) =>
 
     config.token = jwt.sign(config, ONLYOFFICE_SECRET);
     console.log('🔐 Token generado');
+    console.log("📦 Config enviado:", JSON.stringify(config, null, 2));
 
     res.json(config);
   } catch (err) {
