@@ -51,6 +51,10 @@ app.use('/api', (req, res, next) => {
   next();
 }, routes);
 
+app.use("/temp", express.static(path.join(__dirname, "temp")));
+console.log("Archivos estáticos disponibles en:", path.join(__dirname, "src", "temp"));
+
+
 // Rutas estáticas para servir archivos desde 'public/media'
 const mediaPath = path.join(__dirname, 'public', 'media');
 console.log(`Configuración de archivos estáticos en: ${mediaPath}`);
