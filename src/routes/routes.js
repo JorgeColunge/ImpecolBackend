@@ -11,7 +11,7 @@ const router = express.Router();
 const pool = require('../config/dbConfig');
 const { v4: uuidv4 } = require('uuid');
 const PizZip = require('pizzip');
-const { xml2js, js2xml } = require('xml-js');
+const xml2js = require('xml2js');
 const Docxtemplater = require('docxtemplater');
 const mammoth = require('mammoth');
 const vm = require('vm');
@@ -19,6 +19,9 @@ const QRCode = require('qrcode');
 const { uploadFile, getSignedUrl, deleteObject  } = require('../config/s3Service');
 const dotenv = require('dotenv');
 const { convertToPDF } = require("../config/convertToPDF");
+const unzipper = require("unzipper");
+const parser = new xml2js.Parser({ explicitArray: false });
+const jwt = require("jsonwebtoken");
 
 const { exec } = require('child_process');
 
@@ -2156,8 +2159,59 @@ router.post("/replace-local-file", uploadDoc.single("file"), async (req, res) =>
 });
 
 // Ruta relativa para los archivos temporales
-const tempDirectory = path.resolve(__dirname, "../../public/media/documents");
+const tempDirectory = path.resolve(__dirname, "../temp");
+const ONLYOFFICE_SECRET = "UXwdLmf9mMi0W6G2cYRhz32DVqISMSzD";
 
+const convertWithOnlyOffice = async (sourcePath, outputExtension = "pdf") => {
+  const fileName = path.basename(sourcePath);
+  const outputFile = fileName.replace(/\.[^/.]+$/, `.${outputExtension}`);
+  const outputPath = path.join(tempDirectory, outputFile);
+
+  // Verifica que el archivo está realmente en la carpeta servida
+  const servedFilePath = path.resolve(tempDirectory, fileName);
+  if (!fs.existsSync(servedFilePath)) {
+    throw new Error(`El archivo ${servedFilePath} no existe o no fue guardado correctamente.`);
+  }
+
+  // 🌐 URL accesible desde el contenedor OnlyOffice
+  const fileUrl = `http://tempserver/temp/${fileName}`;
+
+  console.log("📤 Iniciando conversión con OnlyOffice...");
+  console.log("📄 Archivo local:", servedFilePath);
+  console.log("🌐 URL para descarga desde el contenedor:", fileUrl);
+
+  const payload = {
+    async: false,
+    filetype: "docx",
+    outputtype: outputExtension,
+    title: fileName,
+    key: `${Date.now()}-${fileName}`,
+    url: fileUrl,
+  };
+
+  const token = jwt.sign(payload, ONLYOFFICE_SECRET);
+  console.log("🔐 JWT generado:", token);
+
+  const response = await axios.post("http://localhost/ConvertService.ashx", payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.data || response.data.error) {
+    console.error("❌ Error en conversión OnlyOffice:", response.data);
+    throw new Error(`Error en conversión OnlyOffice: ${response.data?.error || "desconocido"}`);
+  }
+
+  const convertedUrl = response.data.fileUrl;
+  console.log("✅ PDF generado en:", convertedUrl);
+
+  const convertedPdf = await axios.get(convertedUrl, { responseType: "arraybuffer" });
+  fs.writeFileSync(outputPath, convertedPdf.data);
+  console.log("💾 PDF guardado en:", outputPath);
+
+  return outputPath;
+};
 router.post("/convert-to-pdf", async (req, res) => {
   const { generatedDocumentId } = req.body;
 
@@ -2223,9 +2277,10 @@ router.post("/convert-to-pdf", async (req, res) => {
       console.log("Archivo DOCX descargado y guardado temporalmente.");
 
     // Convertir el archivo DOCX a PDF usando `convertToPDF`
-    console.log("Iniciando conversión a PDF...");
-    const pdfBuffer = await convertToPDF(fs.readFileSync(docxPath));
-    console.log("Archivo convertido a PDF exitosamente.");
+    console.log("Iniciando conversión a PDF con OnlyOffice...");
+    const pdfPath = await convertWithOnlyOffice(docxPath); // función que crearemos
+    const pdfBuffer = fs.readFileSync(pdfPath);
+    console.log("Archivo convertido a PDF exitosamente:", pdfPath);
 
     // Subir el PDF a S3
     const newKey = `documents/generated/${Date.now()}-generated.pdf`;
@@ -2263,6 +2318,7 @@ router.post("/convert-to-pdf", async (req, res) => {
     // Limpiar archivo temporal
     console.log("Eliminando archivo temporal...");
     fs.unlinkSync(docxPath);
+    fs.unlinkSync(pdfPath); // Limpia también el PDF temporal
   } catch (error) {
     console.error("Error al procesar el archivo:", error.message);
     res.status(500).json({
@@ -4824,9 +4880,9 @@ router.post('/save-configuration', async (req, res) => {
                         case "this_year":
                           return serviceDate.isSame(now, 'year');
                         case "last_3_months":
-                          return serviceDate.isAfter(now.clone().subtract(3, 'months'));
+                          return serviceDate.isAfter(now.clone().subtract(2, 'months'));
                         case "last_month":
-                          return serviceDate.isSame(now.clone().subtract(1, 'month'), 'month');
+                          return serviceDate.isSame(now.clone().subtract(0, 'month'), 'month');
                         case "this_week":
                           return serviceDate.isSame(now, 'week');
                         default:
@@ -4910,9 +4966,9 @@ router.post('/save-configuration', async (req, res) => {
                           case "this_year":
                             return inspectionDate.isSame(now, 'year');
                           case "last_3_months":
-                            return inspectionDate.isAfter(now.clone().subtract(3, 'months'));
+                            return inspectionDate.isAfter(now.clone().subtract(2, 'months'));
                           case "last_month":
-                            return inspectionDate.isSame(now.clone().subtract(1, 'month'), 'month');
+                            return inspectionDate.isSame(now.clone().subtract(0, 'month'), 'month');
                           case "this_week":
                             return inspectionDate.isSame(now, 'week');
                           default:
@@ -5010,9 +5066,9 @@ router.post('/save-configuration', async (req, res) => {
                             case "this_year":
                               return inspectionDate.isSame(now, 'year');
                             case "last_3_months":
-                              return inspectionDate.isAfter(now.clone().subtract(3, 'months'));
+                              return inspectionDate.isAfter(now.clone().subtract(2, 'months'));
                             case "last_month":
-                              return inspectionDate.isSame(now.clone().subtract(1, 'month'), 'month');
+                              return inspectionDate.isSame(now.clone().subtract(0, 'month'), 'month');
                             case "this_week":
                               return inspectionDate.isSame(now, 'week');
                             default:
@@ -5195,9 +5251,9 @@ router.post('/save-configuration', async (req, res) => {
                             case "this_year":
                               return inspectionDate.isSame(now, 'year');
                             case "last_3_months":
-                              return inspectionDate.isAfter(now.clone().subtract(3, 'months'));
+                              return inspectionDate.isAfter(now.clone().subtract(2, 'months'));
                             case "last_month":
-                              return inspectionDate.isSame(now.clone().subtract(1, 'month'), 'month');
+                              return inspectionDate.isSame(now.clone().subtract(0, 'month'), 'month');
                             case "this_week":
                               return inspectionDate.isSame(now, 'week');
                             default:
@@ -5221,23 +5277,56 @@ router.post('/save-configuration', async (req, res) => {
                       // Asignar valores según el campo especificado
                       if (filteredInspections.length > 0) {
                         if (campo.startsWith("findings_")) {
-                          const keyPath = campo.replace('findings_', ''); // Extraer jerarquía de claves
-                          variables[key] = getValueFromJson(filteredInspections[0].findings, keyPath, tipoInspeccion) || "No encontrado";
+                          const keyPath = campo.replace('findings_', '');
+                          const resultados = filteredInspections.map((inspection) => {
+                            return getValueFromJson(inspection.findings, keyPath, tipoInspeccion);
+                          });
+                        
+                          // Aplana y limpia los resultados
+                          const valores = resultados.flat().filter(v => v && v !== "No encontrado");
+                        
+                          variables[key] = valores.length > 0 ? valores.join("* ") : "No encontrado";
                         } else {
-                          variables[key] = filteredInspections[0][campo] || "No encontrado";
+                          const valores = filteredInspections
+                            .map((inspection) => inspection[campo])
+                            .filter((v) => v && v !== "No encontrado");
+                        
+                          if (campo === "date") {
+                            const fechasFormateadas = valores.map((rawDate) => {
+                              try {
+                                return new Date(rawDate).toLocaleDateString('es-ES', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric'
+                                });
+                              } catch {
+                                return "Fecha inválida";
+                              }
+                            });
+                            variables[key] = fechasFormateadas.join("* ");
+                          } else if (campo === "time" || campo === "exit_time") {
+                            const horasFormateadas = valores.map((rawTime) => {
+                              try {
+                                const dateObj = new Date(\`1970-01-01T\${rawTime}\`);
+                                return dateObj.toLocaleTimeString('es-CO', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: false
+                                });
+                              } catch {
+                                return "Hora inválida";
+                              }
+                            });
+                            variables[key] = horasFormateadas.join("* ");
+                          } else {
+                            variables[key] = valores.join("* ") || "No encontrado";
+                          }
                         }
                       } else {
                         console.warn(\`No se encontraron inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}".\`);
                         variables[key] = "No encontrado";
                       }
-                    } else {
-                        if (filteredInspections.length > 0 && filteredInspections[0].hasOwnProperty(campo)) {
-                          variables[key] = filteredInspections[0][campo];
-                        } else {
-                          console.warn(\`No se encontraron inspecciones para el período "\${periodo}", tipo "\${tipoInspeccion}", o el campo "\${campo}".\`);
-                          variables[key] = "No encontrado";
-                        }
-                      }
+                    }
                   });
 
                   // Procesar tablas específicas para "services"
@@ -5284,9 +5373,9 @@ router.post('/save-configuration', async (req, res) => {
                                 case "this_year":
                                   return inspectionDate.isSame(now, 'year');
                                 case "last_3_months":
-                                  return inspectionDate.isAfter(now.clone().subtract(3, 'months'));
+                                  return inspectionDate.isAfter(now.clone().subtract(2, 'months'));
                                 case "last_month":
-                                  return inspectionDate.isSame(now.clone().subtract(1, 'month'), 'month');
+                                  return inspectionDate.isSame(now.clone().subtract(0, 'month'), 'month');
                                 case "this_week":
                                   return inspectionDate.isSame(now, 'week');
                                 default:
@@ -7738,5 +7827,281 @@ router.delete('/delete-from-botix', async (req, res) => {
     });
   }
 });
+
+// Utilidad para extraer texto plano de objetos XML
+const extractTextFromNode = (node) => {
+  if (typeof node === "string") return node;
+  if (typeof node === "object") {
+    return Object.values(node)
+      .map(extractTextFromNode)
+      .join(" ");
+  }
+  return "";
+};
+
+// Extrae tablas reales de content.xml
+const extractTablesFromXml = (root) => {
+  const tables = [];
+  const tableElements =
+    root["office:document-content"]?.["office:body"]?.["office:text"]?.["table:table"];
+
+  if (!tableElements) return tables;
+
+  const tableArray = Array.isArray(tableElements) ? tableElements : [tableElements];
+
+  tableArray.forEach((table, index) => {
+    const nombre = table["$"]?.["table:name"] || `Tabla ${index + 1}`;
+    const rows = Array.isArray(table["table:table-row"])
+      ? table["table:table-row"]
+      : [table["table:table-row"]];
+
+    const detalles = rows.map((row) => {
+      const cells = Array.isArray(row["table:table-cell"])
+        ? row["table:table-cell"]
+        : [row["table:table-cell"]];
+
+      return cells.map((cell) => {
+        const contenido = cell["text:p"];
+        if (Array.isArray(contenido))
+          return contenido.map((p) => (typeof p === "string" ? p : "")).join(" ");
+        return typeof contenido === "string" ? contenido : "";
+      });
+    });
+
+    const encabezado = detalles.length > 0 ? detalles[0] : [];
+    const cuerpo = detalles.length > 1 ? detalles.slice(1) : [];
+
+    tables.push({
+      nombre,
+      encabezado: {
+        filas: 1,
+        columnas: encabezado.length,
+        detalles: [{ cells: encabezado }],
+      },
+      cuerpo: {
+        filas: cuerpo.length,
+        columnas: encabezado.length,
+        detalles: cuerpo,
+      },
+    });
+  });
+
+  return tables;
+};
+
+// Ruta principal
+router.post("/extract-odt-data", upload.single("file"), async (req, res) => {
+  const inputPath = req.file.path;
+  const outputDir = path.dirname(inputPath);
+  let odtPath = inputPath;
+
+  const isDocx = inputPath.endsWith(".docx");
+
+  try {
+    // 1. Convertir si es DOCX
+    if (isDocx) {
+      await new Promise((resolve, reject) => {
+        exec(
+          `soffice --headless --convert-to odt --outdir ${outputDir} ${inputPath}`,
+          (err) => {
+            if (err) return reject(err);
+            resolve();
+          }
+        );
+      });
+
+      const files = fs.readdirSync(outputDir);
+      const odtFile = files.find((f) => f.endsWith(".odt"));
+      if (!odtFile) return res.status(500).send("No se generó archivo .odt");
+      odtPath = path.join(outputDir, odtFile);
+    }
+
+    // 2. Leer content.xml del .odt
+    const zipStream = fs
+      .createReadStream(odtPath)
+      .pipe(unzipper.Parse({ forceStream: true }));
+
+    let xmlContent = "";
+    for await (const entry of zipStream) {
+      if (entry.path === "content.xml") {
+        xmlContent = await entry.buffer().then((b) => b.toString());
+      } else {
+        entry.autodrain();
+      }
+    }
+
+    if (!xmlContent) return res.status(500).send("No se encontró content.xml");
+
+    // 3. Parsear XML y extraer información
+    const parsed = await parser.parseStringPromise(xmlContent);
+    const rawText = extractTextFromNode(parsed);
+    const matches = rawText.match(/{{\s*[\wáéíóúüñÁÉÍÓÚÜÑ._-]+\s*}}/g) || [];
+    const variables = matches.map((v) => v.replace(/[{}]/g, "").trim());
+    const tables = extractTablesFromXml(parsed);
+
+    const html = `<div style="white-space:pre-wrap;">${rawText}</div>`;
+
+    res.json({ html, variables, tables });
+
+    // 4. Limpieza
+    try { fs.unlinkSync(inputPath); } catch (_) {}
+    if (isDocx) try { fs.unlinkSync(odtPath); } catch (_) {}
+
+  } catch (error) {
+    console.error("❌ Error al procesar ODT:", error);
+    res.status(500).send("Error interno al procesar ODT");
+  }
+});
+
+router.post("/preview-doc", upload.single("file"), async (req, res) => {
+  const inputPath = req.file.path;
+  const outputDir = path.dirname(inputPath);
+
+  console.log("🟡 [PREVIEW] Recibido archivo:", inputPath);
+
+  try {
+    // 1. Convertir a HTML enriquecido
+    const command = `soffice --headless --convert-to "html:XHTML Writer File:UTF8" --outdir "${outputDir}" "${inputPath}"`;
+    console.log("🛠 Ejecutando:", command);
+
+    await new Promise((resolve, reject) => {
+      exec(command, (err, stdout, stderr) => {
+        console.log("📤 stdout:", stdout);
+        console.error("📥 stderr:", stderr);
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+
+    // 2. Buscar archivo HTML generado
+    const htmlFile = fs
+      .readdirSync(outputDir)
+      .find((f) => f.endsWith(".html") && f.includes(path.basename(inputPath).split(".")[0]));
+
+    if (!htmlFile) return res.status(500).send("No se generó archivo .html");
+
+    const htmlPath = path.join(outputDir, htmlFile);
+    let htmlContent = fs.readFileSync(htmlPath, "utf8");
+
+    // 3. Extraer imagen de fondo (opcional)
+    let fondoBase64 = "";
+    try {
+      const imageBuffer = await extractFirstImageFromODT(inputPath);
+      if (imageBuffer) {
+        fondoBase64 = `data:image/png;base64,${imageBuffer.toString("base64")}`;
+        console.log("🖼 Imagen de fondo extraída");
+      }
+    } catch (e) {
+      console.warn("⚠️ No se pudo extraer imagen de fondo:", e.message);
+    }
+
+    // 4. Insertar estilos A4 + fondo
+    htmlContent = htmlContent.replace(
+      /<head>/i,
+      `<head>
+<style>
+@page {
+  size: A4;
+  margin: 20mm;
+}
+body {
+  width: 210mm;
+  min-height: 297mm;
+  margin: auto;
+  background: white ${fondoBase64 ? `url('${fondoBase64}') no-repeat center center` : ""};
+  background-size: contain;
+  padding: 20mm;
+  box-shadow: 0 0 5mm rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+.page-break {
+  page-break-after: always;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+td, th {
+  border: 1px solid #ccc;
+  padding: 4px;
+}
+</style>`
+    );
+
+    // 5. Enviar HTML
+    res.send(htmlContent);
+
+    // 6. Limpieza
+    try { fs.unlinkSync(inputPath); } catch (_) {}
+    try { fs.unlinkSync(htmlPath); } catch (_) {}
+
+  } catch (error) {
+    console.error("❌ Error al generar vista previa HTML:", error);
+    res.status(500).send("Error al generar vista previa HTML");
+  }
+});
+
+// 🔧 Utilidad para extraer la primera imagen de fondo desde el .odt
+async function extractFirstImageFromODT(odtPath) {
+  const zip = fs.createReadStream(odtPath).pipe(unzipper.Parse({ forceStream: true }));
+  for await (const entry of zip) {
+    if (entry.path.startsWith("Pictures/") && entry.type === "File") {
+      const buffer = await entry.buffer();
+      return buffer;
+    } else {
+      entry.autodrain();
+    }
+  }
+  return null;
+}
+
+// 🚀 Ruta principal
+router.post('/get-onlyoffice-config', upload.single('file'), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file || !file.path) {
+      console.warn("⚠️ Archivo no recibido correctamente:", file);
+      return res.status(400).send('Archivo faltante');
+    }
+
+    console.log('📥 Archivo recibido:', file.originalname);
+    console.log('🧾 Tipo MIME:', file.mimetype);
+    console.log('📍 Ruta local:', file.path);
+
+    const publicUrl = `http://host.docker.internal:10000/temp/${file.filename}`;
+    console.log('🌐 URL accesible desde OnlyOffice:', publicUrl);
+
+    const config = {
+      document: {
+        fileType: path.extname(file.originalname).substring(1),
+        title: file.originalname,
+        key: `${file.filename}-${Date.now()}`,
+        url: publicUrl
+      },
+      documentType: 'word',
+      editorConfig: {
+        mode: 'edit',
+        user: {
+          id: 'admin',
+          name: 'Administrador'
+        },
+        callbackUrl: ''
+      }
+    };
+
+    config.token = jwt.sign(config, ONLYOFFICE_SECRET);
+    console.log('🔐 Token generado');
+
+    res.json(config);
+  } catch (err) {
+    console.error('❌ Error generando configuración OnlyOffice:', err);
+    res.status(500).send('Error interno al generar configuración OnlyOffice');
+  }
+});
+
 
 module.exports = router;
