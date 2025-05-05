@@ -8089,7 +8089,7 @@ router.post('/get-onlyoffice-config', upload.single('file'), async (req, res) =>
           id: 'admin',
           name: 'Administrador'
         },
-        callbackUrl: ''
+        callbackUrl: 'https://services.impecol.com/api/onlyoffice-callback'
       }
     };
 
