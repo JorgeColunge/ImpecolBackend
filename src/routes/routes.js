@@ -3479,6 +3479,12 @@ const uploadInspectionImages = multer({
 router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (req, res) => {
   try {
     const { inspectionId } = req.params;
+    // 🔍 Obtener fecha original de la inspección antes de modificar findings
+    const inspectionDateQuery = `SELECT date FROM inspections WHERE id = $1`;
+    const inspectionDateResult = await pool.query(inspectionDateQuery, [inspectionId]);
+
+    const inspectionDate = inspectionDateResult.rows[0]?.date || new Date().toISOString();
+
     const { generalObservations, findingsByType, productsByType, stationsFindings, signatures, userId, exitTime } = req.body;
 
     console.log('Datos recibidos en el body:', {
@@ -3597,17 +3603,23 @@ router.post('/inspections/:inspectionId/save', uploadInspectionImages, async (re
       },
     };
 
-    // Asociar imágenes a `findingsByType`
+    // Asociar imágenes a `findingsByType` y agregar fecha y hora
     Object.keys(parsedFindingsByType).forEach((type) => {
       parsedFindingsByType[type] = parsedFindingsByType[type].map((finding) => {
         // Asocia la imagen correspondiente al ID del hallazgo
         if (findingsImagesById[finding.id]) {
           finding.photo = findingsImagesById[finding.id];
         }
+
+        // ✅ Agregar o preservar la fecha y hora del hallazgo
+        const moment = require('moment'); // Asegúrate de tener esto al inicio del archivo
+        finding.date = finding.date || moment(inspectionDate).format("DD-MM-YYYY");
+
+        finding.time = finding.time || new Date().toTimeString().split(" ")[0].slice(0, 5); // formato HH:MM
+
         return finding;
       });
     });
-
 
     // Asociar imágenes a `stationsFindings`
     parsedStationsFindings.forEach((finding) => {
