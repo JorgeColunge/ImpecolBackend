@@ -2193,7 +2193,8 @@ const convertWithOnlyOffice = async (sourcePath, outputExtension = "pdf") => {
   const token = jwt.sign(payload, ONLYOFFICE_SECRET);
   console.log("🔐 JWT generado:", token);
 
-  const response = await axios.post("http://localhost/ConvertService.ashx", payload, {
+  //const response = await axios.post("http://localhost/ConvertService.ashx", payload, {
+  const response = await axios.post("http://onlyoffice/ConvertService.ashx", payload, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
