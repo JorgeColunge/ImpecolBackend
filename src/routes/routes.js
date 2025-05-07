@@ -2174,7 +2174,8 @@ const convertWithOnlyOffice = async (sourcePath, outputExtension = "pdf") => {
   }
 
   // 🌐 URL accesible desde el contenedor OnlyOffice
-  const fileUrl = `http://tempserver/temp/${fileName}`;
+  //const fileUrl = `http://tempserver/temp/${fileName}`;
+  const fileUrl = `https://services.impecol.com/temp/${fileName}`;
 
   console.log("📤 Iniciando conversión con OnlyOffice...");
   console.log("📄 Archivo local:", servedFilePath);
