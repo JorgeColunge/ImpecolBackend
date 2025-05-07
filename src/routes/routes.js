@@ -8072,7 +8072,7 @@ router.post('/get-onlyoffice-config', upload.single('file'), async (req, res) =>
     console.log('🧾 Tipo MIME:', file.mimetype);
     console.log('📍 Ruta local:', file.path);
     //const publicUrl = `http://host.docker.internal:10000/temp/${file.filename}`
-    const publicUrl = `https://services.impecol.com:10000/temp/${file.filename}`;
+    const publicUrl = `https://services.impecol.com/temp/${file.filename}`;
     console.log('🌐 URL accesible desde OnlyOffice:', publicUrl);
 
     const config = {
