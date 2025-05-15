@@ -2358,6 +2358,58 @@ router.get('/actions-inspections', async (req, res) => {
   }
 });
 
+// Ruta para obtener acciones relacionadas con servicios
+router.get('/actions-services', async (req, res) => {
+  try {
+
+    // Consultar en la tabla `document_actions` filtrando por `entity_type`
+    const result = await pool.query(
+      'SELECT * FROM document_actions WHERE entity_type = $1',
+      ['services']
+    );
+
+    const actions = result.rows;
+
+    res.json({
+      success: true,
+      actions: actions // Devuelve la lista de acciones
+    });
+  } catch (error) {
+    console.error("Error al obtener acciones:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      error: error.message
+    });
+  }
+});
+
+// Ruta para obtener acciones relacionadas con clientes
+router.get('/actions-clients', async (req, res) => {
+  try {
+
+    // Consultar en la tabla `document_actions` filtrando por `entity_type`
+    const result = await pool.query(
+      'SELECT * FROM document_actions WHERE entity_type = $1',
+      ['clients']
+    );
+
+    const actions = result.rows;
+
+    res.json({
+      success: true,
+      actions: actions // Devuelve la lista de acciones
+    });
+  } catch (error) {
+    console.error("Error al obtener acciones:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      error: error.message
+    });
+  }
+});
+
 
 // Ruta para obtener todas las inspecciones
 router.get('/inspections', async (req, res) => {
@@ -4624,72 +4676,79 @@ router.post('/save-configuration', async (req, res) => {
               let tablas = ${JSON.stringify(tablas, null, 2)};
               let aiModels = ${JSON.stringify(aiModels, null, 2)};
 
-              // Función para realizar consultas a GPT
-              const consultarGPT = async (modelo, personalidad, prompt) => {
+              // Función para realizar consultas a GPT y registrar el consumo en backend con logs detallados
+              async function consultarGPT(modelo, personalidad, prompt, descripcion = 'generación de documento') {
                 const apiKey = process.env.OPENAI_API_KEY;
-                const url = "https://api.openai.com/v1/chat/completions";
+                const openaiUrl = 'https://api.openai.com/v1/chat/completions';
+                const backendUrl = 'https://services.impecol.com:10000/api/consumptions'; // cambiar en producción
+
                 const headers = {
                   Authorization: \`Bearer \${apiKey}\`,
-                  "Content-Type": "application/json",
+                  'Content-Type': 'application/json',
                 };
+
                 const payload = {
                   model: modelo,
                   messages: [
-                    { role: "system", content: personalidad },
-                    { role: "user", content: prompt },
+                    { role: 'system', content: personalidad },
+                    { role: 'user', content: prompt },
                   ],
                 };
 
                 try {
-                  const responseGpt = await axios.post(url, payload, { headers });
-                  const resultado = responseGpt.data.choices[0].message.content.trim();
+                  const response = await axios.post(openaiUrl, payload, { headers });
 
-                  // Cálculo del uso de tokens
-                  const usage = responseGpt.data.usage;
+                  //console.log('📦 Respuesta completa de OpenAI:', JSON.stringify(response.data, null, 2));
+
+                  const result = response.data.choices[0]?.message?.content?.trim() || '';
+                  const usage = response.data.usage;
+
+                  if (!usage) throw new Error('La respuesta de OpenAI no contiene uso de tokens');
+
                   const inputTokens = usage.prompt_tokens;
                   const outputTokens = usage.completion_tokens;
 
-                  // Deja la sección de envío comentada por ahora
-                  /*
-                  const backendUrl = "https://botix.axiomarobotics.com:10000/api/consumptions";
-                  const backendPayloadInput = {
-                    api_name: "GPT",
-                    model: modelo,
-                    unit_type: "input_token",
-                    unit_count: inputTokens,
-                    query_details: "consulta personalizada",
-                    company_id: integrationDetails.company_id,
-                    user_id: responsibleUserId,
-                    conversationId: conversationId,
-                  };
-                  await axios.post(backendUrl, backendPayloadInput);
+                  const registros = [
+                    {
+                      api_name: 'GPT',
+                      model: modelo,
+                      unit_type: 'input_token',
+                      unit_count: inputTokens,
+                      query_details: descripcion,
+                    },
+                    {
+                      api_name: 'GPT',
+                      model: modelo,
+                      unit_type: 'output_token',
+                      unit_count: outputTokens,
+                      query_details: descripcion,
+                    }
+                  ];
 
-                  const backendPayloadOutput = {
-                    api_name: "GPT",
-                    model: modelo,
-                    unit_type: "output_token",
-                    unit_count: outputTokens,
-                    query_details: "consulta personalizada",
-                    company_id: integrationDetails.company_id,
-                    user_id: responsibleUserId,
-                    conversationId: conversationId,
-                  };
-                  await axios.post(backendUrl, backendPayloadOutput);
-                  */
+                  // Enviar registros y loguear cada uno
+                  await Promise.all(
+                    registros.map(async (registro) => {
+                      try {
+                        const r = await axios.post(backendUrl, registro);
+                      } catch (err) {
+                        throw err;
+                      }
+                    })
+                  );
 
-                  return resultado;
+                  return result;
                 } catch (error) {
-                  console.error("Error al obtener respuesta de GPT:", error);
-                  return "Error al obtener la respuesta";
+                  console.error('❌ Error en consulta o registro GPT:', error.message);
+                  throw error;
                 }
-              };
+              }
 
               let defaultWidthEMU = 990000; // Ancho en EMU
               let cellWidthEMU = defaultWidthEMU; // Variable global para el ancho de celda
 
               const isImageUrl = (url) => {
                 const isImage = /\.(png|jpe?g|gif|bmp|webp|svg)$/i.test(url);
-                console.log(\`Verificando si "\${url}" es una URL de imagen: \${isImage}\`);
+                //console.log(\`Verificando si "\${url}" es una URL de imagen: \${isImage}\`);
                 return isImage;
               };
 
@@ -4713,7 +4772,7 @@ router.post('/save-configuration', async (req, res) => {
               
                 // 1. Verificar si el archivo document.xml.rels existe
                 if (zip.files[relsPath]) {
-                  console.log("El archivo 'document.xml.rels' existe. Cargando contenido...");
+                  //console.log("El archivo 'document.xml.rels' existe. Cargando contenido...");
                   relsXml = zip.files[relsPath].asText();
                 } else {
                   console.warn("El archivo 'document.xml.rels' no existe. Creando uno nuevo...");
@@ -4726,7 +4785,7 @@ router.post('/save-configuration', async (req, res) => {
                 const maxExistingId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
                 let uniqueId = \`rId\${maxExistingId + 1}\`;
               
-                console.log(\`Generando nueva relación con ID: \${uniqueId}\`);
+                //console.log(\`Generando nueva relación con ID: \${uniqueId}\`);
               
                 // 3. Verificar si la imagen ya está referenciada
                 if (relsXml.includes(\`media/\${imageName}\`)) {
@@ -4744,7 +4803,7 @@ router.post('/save-configuration', async (req, res) => {
               
                 // 5. Guardar el archivo actualizado en el ZIP
                 zip.file(relsPath, updatedRelsXml);
-                console.log(\`Nueva relación añadida para '\${imageName}' con ID '\${uniqueId}'.\`);
+                //console.log(\`Nueva relación añadida para '\${imageName}' con ID '\${uniqueId}'.\`);
               
                 return uniqueId; // Devolver el nuevo ID
               };    
@@ -4832,7 +4891,7 @@ router.post('/save-configuration', async (req, res) => {
                 }
 
                 const clientData = resultClientData.rows[0];
-                console.log("Datos de la entidad 'clients' obtenidos:", clientData);
+                //console.log("Datos de la entidad 'clients' obtenidos:", clientData);
 
                 const queryStationsData = 'SELECT * FROM stations WHERE client_id = $1';
                 const resultStationsData = await pool.query(queryStationsData, [idEntity]);
@@ -4853,19 +4912,19 @@ router.post('/save-configuration', async (req, res) => {
 
                 // Validar si se obtuvieron inspecciones
                 const inspectionsData = resultInspectionsData.rows.length > 0 ? resultInspectionsData.rows : [];
-                console.log("Datos de la entidad 'inspections' obtenidos:", inspectionsData);
+                //console.log("Datos de la entidad 'inspections' obtenidos:", inspectionsData);
 
-                console.log("Datos de la entidad 'stations' obtenidos:", stationsData);
-                console.log("Datos de la entidad 'client_maps' obtenidos:", clientMapsData);
-                console.log("Datos de la entidad 'services' obtenidos:", servicesData);
+                //console.log("Datos de la entidad 'stations' obtenidos:", stationsData);
+                //console.log("Datos de la entidad 'client_maps' obtenidos:", clientMapsData);
+                //console.log("Datos de la entidad 'services' obtenidos:", servicesData);
 
                 // Función auxiliar para actualizar valores según tipo de datos
                 const updateValue = (data, field, type) => {
                   if (data && data.hasOwnProperty(field)) {
-                    console.log(\`Valor encontrado para "\${field}" en "\${type}": \${data[field]}\`);
+                    //console.log(\`Valor encontrado para "\${field}" en "\${type}": \${data[field]}\`);
                     return data[field];
                   } else {
-                    console.warn(\`El campo "\${field}" no existe en la entidad "\${type}".\`);
+                    //console.warn(\`El campo "\${field}" no existe en la entidad "\${type}".\`);
                     return "No encontrado";
                   }
                 };
@@ -4925,9 +4984,9 @@ router.post('/save-configuration', async (req, res) => {
                       variables[key] = filteredStations[0].hasOwnProperty(stationField)
                         ? filteredStations[0][stationField]
                         : "No encontrado";
-                      console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                      //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                     } else {
-                      console.warn(\`No se encontraron estaciones para la categoría "Roedores".\`);
+                      //console.warn(\`No se encontraron estaciones para la categoría "Roedores".\`);
                       variables[key] = "No encontrado";
                     }
                   } else if (value.startsWith("Estaciones Aéreas-")) {
@@ -4939,9 +4998,9 @@ router.post('/save-configuration', async (req, res) => {
                       variables[key] = filteredStations[0].hasOwnProperty(stationField)
                         ? filteredStations[0][stationField]
                         : "No encontrado";
-                      console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                      //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                     } else {
-                      console.warn(\`No se encontraron estaciones para la categoría "Aéreas".\`);
+                      //console.warn(\`No se encontraron estaciones para la categoría "Aéreas".\`);
                       variables[key] = "No encontrado";
                     }
                   } else if (value.startsWith("Servicios-")) {
@@ -4949,14 +5008,14 @@ router.post('/save-configuration', async (req, res) => {
                     const filteredServices = filterServices(servicesData, periodo, tipoServicio);
                     if (filteredServices.length > 0 && filteredServices[0].hasOwnProperty(campo)) {
                       variables[key] = filteredServices[0][campo];
-                      console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                      //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                     } else {
                       console.warn(\`No se encontraron servicios para el período "\${periodo}", tipo "\${tipoServicio}", o el campo "\${campo}".\`);
                       variables[key] = "No encontrado";
                     }
                   } else if (value.startsWith("Inspecciones-")) {
                     const [_, periodo, tipoInspeccion, campo] = value.split('-'); // Extraer <Periodo>, <Tipo de inspección>, <Campo>
-                    console.log(\`Filtrando inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}"...\`);
+                    //console.log(\`Filtrando inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}"...\`);
 
                     // Filtrar inspecciones por período
                     let filteredInspections = inspectionsData;
@@ -4979,7 +5038,7 @@ router.post('/save-configuration', async (req, res) => {
                       });
                     }
 
-                    console.log(\`Inspecciones filtradas por período (\${periodo}):\`, filteredInspections);
+                    //console.log(\`Inspecciones filtradas por período (\${periodo}):\`, filteredInspections);
 
                     // Filtrar por tipo de inspección
                     if (tipoInspeccion !== "all") {
@@ -4992,7 +5051,7 @@ router.post('/save-configuration', async (req, res) => {
                       });
                     }
 
-                    console.log(\`Inspecciones filtradas por tipo (\${tipoInspeccion}):\`, filteredInspections);
+                    //console.log(\`Inspecciones filtradas por tipo (\${tipoInspeccion}):\`, filteredInspections);
 
                     // Manejar campos del JSON de findings
                     if (campo.startsWith("findings_")) {
@@ -5007,12 +5066,11 @@ router.post('/save-configuration', async (req, res) => {
                   }
                 });
 
-                console.log("Variables actualizadas después de las consultas:", variables);
+                //console.log("Variables actualizadas después de las consultas:", variables);
 
                 // Procesar tablas
                 tablas.forEach((tabla) => {
-                  console.log(\`\\n=== Procesando tabla: \${tabla.nombre} ===\`);
-                  console.log("Cuerpo original de la tabla:", tabla.cuerpo);
+                  //console.log("Cuerpo original de la tabla:", tabla.cuerpo);
 
                   const nuevoCuerpo = [];
 
@@ -5056,7 +5114,7 @@ router.post('/save-configuration', async (req, res) => {
                       );
                     } else if (field.startsWith("Inspecciones-")) {
                       const [_, periodo, tipoInspeccion, campo] = field.split('-');
-                      console.log(\`Procesando inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}" en tablas...\`);
+                      //console.log(\`Procesando inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}" en tablas...\`);
 
                       // Filtrar inspecciones por período
                       let filteredInspections = inspectionsData;
@@ -5079,7 +5137,7 @@ router.post('/save-configuration', async (req, res) => {
                         });
                       }
 
-                      console.log(\`Inspecciones filtradas por período (\${periodo}):\`, filteredInspections);
+                      //console.log(\`Inspecciones filtradas por período (\${periodo}):\`, filteredInspections);
 
                       // Filtrar por tipo de inspección
                       if (tipoInspeccion !== "all") {
@@ -5092,7 +5150,7 @@ router.post('/save-configuration', async (req, res) => {
                         });
                       }
 
-                      console.log(\`Inspecciones filtradas por tipo (\${tipoInspeccion}):\`, filteredInspections);
+                      //console.log(\`Inspecciones filtradas por tipo (\${tipoInspeccion}):\`, filteredInspections);
 
                       // Manejar campos del JSON de findings
                       if (campo.startsWith("findings_")) {
@@ -5128,7 +5186,7 @@ router.post('/save-configuration', async (req, res) => {
 
                 // Actualizar el cuerpo de la tabla con las nuevas filas generadas
                 tabla.cuerpo = nuevoCuerpo;
-                console.log(\`Tabla "\${tabla.nombre}" actualizada:\`, tabla.cuerpo);
+                //console.log(\`Tabla "\${tabla.nombre}" actualizada:\`, tabla.cuerpo);
                 });
               }
 
@@ -5148,7 +5206,7 @@ router.post('/save-configuration', async (req, res) => {
                   }
 
                   const serviceData = resultServiceData.rows[0];
-                  console.log('Datos de la entidad "services" obtenidos:', serviceData);
+                  //console.log('Datos de la entidad "services" obtenidos:', serviceData);
 
                   // Consultar datos del cliente relacionado con el servicio
                   const resultClientData = await pool.query(queryClientData, [serviceData.client_id]);
@@ -5158,7 +5216,7 @@ router.post('/save-configuration', async (req, res) => {
                   }
 
                   const clientData = resultClientData.rows[0];
-                  console.log('Datos de la entidad "clients" obtenidos:', clientData);
+                  //console.log('Datos de la entidad "clients" obtenidos:', clientData);
 
                   // Consultar datos del responsable relacionado con el servicio
                   const resultUserData = await pool.query(queryUserData, [serviceData.responsible]);
@@ -5170,7 +5228,7 @@ router.post('/save-configuration', async (req, res) => {
 
                   try {
                     companionIds = JSON.parse(companionIdsRaw).map((id) => id.trim());
-                    console.log("IDs de acompañantes extraídos:", companionIds);
+                    //console.log("IDs de acompañantes extraídos:", companionIds);
                   } catch (error) {
                     console.error("Error al parsear el campo 'companion':", error);
                     companionIds = []; // Si hay un error, asignar un array vacío
@@ -5187,14 +5245,14 @@ router.post('/save-configuration', async (req, res) => {
                       companionData.push(null); // Si no se encuentra el usuario, agregar un null
                     }
                   }
-                  console.log("Datos de los acompañantes obtenidos:", companionData);
+                  //console.log("Datos de los acompañantes obtenidos:", companionData);
 
 
                   // Consultar datos de inspecciones relacionados con el servicio
                   const resultInspections = await pool.query(queryInspections, [idEntity]);
                   const inspectionsData = resultInspections.rows;
 
-                  console.log('Datos de inspecciones obtenidos:', inspectionsData);
+                  //console.log('Datos de inspecciones obtenidos:', inspectionsData);
 
                   // Consultar normativas relacionadas con la categoría del cliente
                   let clientRulesData = [];
@@ -5203,7 +5261,7 @@ router.post('/save-configuration', async (req, res) => {
                     try {
                       const resultRulesData = await pool.query(queryRulesData, [clientData.category]);
                       clientRulesData = resultRulesData.rows;
-                      console.log('Normativas obtenidas para la categoría del cliente:', clientRulesData);
+                      //console.log('Normativas obtenidas para la categoría del cliente:', clientRulesData);
                     } catch (error) {
                       console.error(\`Error al consultar normativas para la categoría "\${clientData.category}":\`, error);
                       clientRulesData = []; // Si falla, asignar un array vacío
@@ -5215,22 +5273,22 @@ router.post('/save-configuration', async (req, res) => {
                     if (value.startsWith("Servicio-")) {
                       const field = value.split('-')[1];
                       variables[key] = serviceData.hasOwnProperty(field) ? serviceData[field] : "No encontrado";
-                      console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                      //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                     } else if (value.startsWith("Cliente-")) {
                       const field = value.split('-')[1];
                       variables[key] = clientData.hasOwnProperty(field) ? clientData[field] : "No encontrado";
-                      console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                      //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                     } else if (value.startsWith("Responsable-")) {
                       const field = value.split('-')[1];
                       variables[key] = responsibleData && responsibleData.hasOwnProperty(field) ? responsibleData[field] : "No encontrado";
-                      console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                      //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                     } else if (value.startsWith("Acompañante-")) {
                       const field = value.split('-')[1];
                       const companionValues = companionData
                         .filter((companion) => companion) // Filtrar valores null
                         .map((companion) => (companion && companion.hasOwnProperty(field) ? companion[field] : "No encontrado"));
                       variables[key] = companionValues.join("* "); // Combina todos los valores en un string separado por comas
-                      console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                      //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                     } else if (typeof value === 'string' && value.startsWith("Normativa Cliente-")) {
                       const ruleField = value.split('-')[1];
                       const ruleValues = clientRulesData
@@ -5238,10 +5296,10 @@ router.post('/save-configuration', async (req, res) => {
                       
                       // Combinar las normativas en un solo string separado por comas
                       variables[key] = ruleValues.join("* ");
-                      console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                      //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                     } else if (value.startsWith("Inspecciones-")) {
                       const [_, periodo, tipoInspeccion, campo] = value.split('-'); // Extraer los parámetros
-                      console.log(\`Filtrando inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}"...\`);
+                      //console.log(\`Filtrando inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}"...\`);
 
                       // Filtrar inspecciones por período
                       let filteredInspections = inspectionsData;
@@ -5274,7 +5332,7 @@ router.post('/save-configuration', async (req, res) => {
                         });
                       }
 
-                      console.log(\`Inspecciones filtradas:\`, filteredInspections);
+                      //console.log(\`Inspecciones filtradas:\`, filteredInspections);
 
                       // Asignar valores según el campo especificado
                       if (filteredInspections.length > 0) {
@@ -5363,7 +5421,7 @@ router.post('/save-configuration', async (req, res) => {
                           });
                         } else if (field.startsWith("Inspecciones-")) {
                           const [_, periodo, tipoInspeccion, campo] = field.split('-');
-                          console.log(\`Procesando inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}" en tablas...\`);
+                          //console.log(\`Procesando inspecciones para "\${periodo}" y tipo "\${tipoInspeccion}" en tablas...\`);
 
                           // Filtrar inspecciones por período
                           let filteredInspections = inspectionsData;
@@ -5386,7 +5444,7 @@ router.post('/save-configuration', async (req, res) => {
                             });
                           }
 
-                          console.log(\`Inspecciones filtradas por período (\${periodo}):\`, filteredInspections);
+                          //console.log(\`Inspecciones filtradas por período (\${periodo}):\`, filteredInspections);
 
                           // Filtrar por tipo de inspección
                           if (tipoInspeccion !== "all") {
@@ -5399,7 +5457,7 @@ router.post('/save-configuration', async (req, res) => {
                             });
                           }
 
-                          console.log(\`Inspecciones filtradas por tipo (\${tipoInspeccion}):\`, filteredInspections);
+                          //console.log(\`Inspecciones filtradas por tipo (\${tipoInspeccion}):\`, filteredInspections);
 
                           // Manejar campos del JSON de findings
                           if (campo.startsWith("findings_")) {
@@ -5458,7 +5516,7 @@ router.post('/save-configuration', async (req, res) => {
                 }
 
                 const inspectionData = resultInspectionData.rows[0];
-                console.log('Datos de la entidad "inspections" obtenidos:', inspectionData);
+                //console.log('Datos de la entidad "inspections" obtenidos:', inspectionData);
 
                 // Consultar datos del servicio relacionado
                 let serviceData = {};
@@ -5469,7 +5527,7 @@ router.post('/save-configuration', async (req, res) => {
                     console.warn(\`No se encontró el servicio relacionado con ID: \${inspectionData.service_id}\`);
                   } else {
                     serviceData = resultServiceData.rows[0];
-                    console.log('Datos del servicio obtenidos:', serviceData);
+                    //console.log('Datos del servicio obtenidos:', serviceData);
                   }
                 }
 
@@ -5482,7 +5540,7 @@ router.post('/save-configuration', async (req, res) => {
                     console.warn(\`No se encontró el cliente relacionado con ID: \${serviceData.client_id}\`);
                   } else {
                     clientData = resultClientData.rows[0];
-                    console.log('Datos del cliente obtenidos:', clientData);
+                    //console.log('Datos del cliente obtenidos:', clientData);
                   }
                 }
 
@@ -5494,7 +5552,7 @@ router.post('/save-configuration', async (req, res) => {
                     console.warn(\`No se encontró el usuario responsable con ID: \${serviceData.responsible}\`);
                   } else {
                     responsibleData = resultUserData.rows[0];
-                    console.log('Datos del responsable obtenidos:', responsibleData);
+                    //console.log('Datos del responsable obtenidos:', responsibleData);
                   }
                 }
 
@@ -5506,7 +5564,7 @@ router.post('/save-configuration', async (req, res) => {
 
                   try {
                     companionIds = JSON.parse(companionIdsRaw).map((id) => id.trim());
-                    console.log("IDs de acompañantes extraídos:", companionIds);
+                    //console.log("IDs de acompañantes extraídos:", companionIds);
                   } catch (error) {
                     console.error("Error al parsear el campo 'companion':", error);
                     companionIds = []; // Si hay un error, asignar un array vacío
@@ -5522,7 +5580,7 @@ router.post('/save-configuration', async (req, res) => {
                       companionData.push(null); // Si no se encuentra el usuario, agregar un null
                     }
                   }
-                  console.log("Datos de los acompañantes obtenidos:", companionData);
+                  //console.log("Datos de los acompañantes obtenidos:", companionData);
                 }
 
                 // Consultar normativas relacionadas con la categoría del cliente
@@ -5532,7 +5590,7 @@ router.post('/save-configuration', async (req, res) => {
                   try {
                     const resultRulesData = await pool.query(queryRulesData, [clientData.category]);
                     clientRulesData = resultRulesData.rows;
-                    console.log('Normativas obtenidas para la categoría del cliente:', clientRulesData);
+                    //console.log('Normativas obtenidas para la categoría del cliente:', clientRulesData);
                   } catch (error) {
                     console.error(\`Error al consultar normativas para la categoría "\${clientData.category}":\`, error);
                     clientRulesData = []; // Si falla, asignar un array vacío
@@ -5544,7 +5602,7 @@ router.post('/save-configuration', async (req, res) => {
                   if (typeof value === 'string' && value.startsWith("Inspección-")) {
                     const [_, periodo, tipoInspeccion, campo] = value.split('-');
                 
-                    console.log(\`Procesando variable para tipo: "\${tipoInspeccion}" y campo: "\${campo}"\`);
+                    //console.log(\`Procesando variable para tipo: "\${tipoInspeccion}" y campo: "\${campo}"\`);
                 
                     if (campo.startsWith("findings_")) {
                         const keyPath = campo.replace('findings_', ''); // Extraer jerarquía de claves
@@ -5567,27 +5625,27 @@ router.post('/save-configuration', async (req, res) => {
                     }
                   } else if (typeof value === 'string' && value.startsWith("Servicio-")) {
                     const serviceField = value.split('-')[1];
-                    console.log(\`Procesando variable del servicio para campo: "\${serviceField}"\`);
+                    //console.log(\`Procesando variable del servicio para campo: "\${serviceField}"\`);
 
                     variables[key] = serviceData[serviceField] || "No encontrado";
                   } else if (typeof value === 'string' && value.startsWith("Cliente-")) {
                     const clientField = value.split('-')[1];
-                    console.log(\`Procesando variable del cliente para campo: "\${clientField}"\`);
+                    //console.log(\`Procesando variable del cliente para campo: "\${clientField}"\`);
 
                     variables[key] = clientData[clientField] || "No encontrado";
                   } else if (typeof value === 'string' && value.startsWith("Responsable-")) {
                     const userField = value.split('-')[1];
-                    console.log(\`Procesando variable del responsable para campo: "\${userField}"\`);
+                    //console.log(\`Procesando variable del responsable para campo: "\${userField}"\`);
 
                     variables[key] = responsibleData[userField] || "No encontrado";
-                    console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                    //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                   } else if (typeof value === 'string' && value.startsWith("Acompañante-")) {
                     const field = value.split('-')[1];
                     const companionValues = companionData
                       .filter((companion) => companion) // Filtrar valores null
                       .map((companion) => (companion && companion.hasOwnProperty(field) ? companion[field] : "No encontrado"));
                     variables[key] = companionValues.join("* "); // Combina todos los valores en un string separado por comas
-                    console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                    //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                   } else if (typeof value === 'string' && value.startsWith("Normativa Cliente-")) {
                     const ruleField = value.split('-')[1];
                     const ruleValues = clientRulesData
@@ -5595,10 +5653,10 @@ router.post('/save-configuration', async (req, res) => {
                     
                     // Combinar las normativas en un solo string separado por comas
                     variables[key] = ruleValues.join("* ");
-                    console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                    //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                   }
 
-                  console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
+                  //console.log(\`Variable "\${key}" actualizada a: \${variables[key]}\`);
                 });
 
                 // Procesar tablas específicas para "inspections"
@@ -5612,7 +5670,7 @@ router.post('/save-configuration', async (req, res) => {
                       if (typeof field === 'string' && field.startsWith("Inspección-")) {
                         const [_, periodo, tipoInspeccion, campo] = field.split('-');
 
-                        console.log(\`Procesando campo para tipo: "\${tipoInspeccion}" y campo: "\${campo}"\`);
+                        //console.log(\`Procesando campo para tipo: "\${tipoInspeccion}" y campo: "\${campo}"\`);
 
                         if (campo.startsWith("findings_")) {
                           const keyPath = campo.replace('findings_', ''); // Extraer jerarquía de claves
@@ -5658,7 +5716,7 @@ router.post('/save-configuration', async (req, res) => {
                       } else if (typeof field === 'string' && field.startsWith("Servicio-")) {
                         const serviceField = field.split('-')[1];
 
-                        console.log(\`Procesando campo del servicio para campo: "\${serviceField}"\`);
+                        //console.log(\`Procesando campo del servicio para campo: "\${serviceField}"\`);
 
                         filasGeneradas.forEach((fila) => {
                           fila[colIndex] = serviceData[serviceField] || "No encontrado";
@@ -5666,7 +5724,7 @@ router.post('/save-configuration', async (req, res) => {
                       } else if (typeof field === 'string' && field.startsWith("Cliente-")) {
                         const clientField = field.split('-')[1];
 
-                        console.log(\`Procesando campo del cliente para campo: "\${clientField}"\`);
+                        //console.log(\`Procesando campo del cliente para campo: "\${clientField}"\`);
 
                         filasGeneradas.forEach((fila) => {
                           fila[colIndex] = clientData[clientField] || "No encontrado";
@@ -5674,7 +5732,7 @@ router.post('/save-configuration', async (req, res) => {
                       } else if (typeof field === 'string' && field.startsWith("Responsable-")) {
                         const userField = field.split('-')[1];
 
-                        console.log(\`Procesando campo del responsable para campo: "\${userField}"\`);
+                        //console.log(\`Procesando campo del responsable para campo: "\${userField}"\`);
 
                         filasGeneradas.forEach((fila) => {
                           fila[colIndex] = responsibleData[userField] || "No encontrado";
@@ -5714,7 +5772,7 @@ router.post('/save-configuration', async (req, res) => {
 
                   // Actualizar el cuerpo de la tabla
                   tabla.cuerpo = nuevoCuerpo;
-                  console.log(\`Tabla "\${tabla.nombre}" actualizada correctamente:\`, tabla.cuerpo);
+                  //console.log(\`Tabla "\${tabla.nombre}" actualizada correctamente:\`, tabla.cuerpo);
                 });
               } catch (error) {
                 console.error("Error al procesar datos para la entidad 'inspections':", error);
@@ -5724,36 +5782,36 @@ router.post('/save-configuration', async (req, res) => {
 
             // Función para procesar placeholders en el prompt con logs detallados
             const procesarPromptConInputs = (prompt, filaVariables = {}) => {
-              console.log(\`Prompt inicial: "\${prompt}"\`);
+              //console.log(\`Prompt inicial: "\${prompt}"\`);
               const regex = /{{(.*?)}}/g; // Nueva expresión regular para encontrar {{<nombre de la variable>}}
 
               const promptProcesado = prompt.replace(regex, (match, variableName) => {
                 // Buscar la variable en las variables específicas de la fila o en las globales
                 const variableValue = filaVariables[variableName] || variables[variableName];
                 if (variableValue !== undefined) {
-                  console.log(\`Reemplazando "\${match}" con el valor: "\${variableValue}"\`);
+                  //console.log(\`Reemplazando "\${match}" con el valor: "\${variableValue}"\`);
                   return variableValue;
                 } else {
-                  console.warn(\`No se encontró la variable para el placeholder "\${match}".\`);
+                  //console.warn(\`No se encontró la variable para el placeholder "\${match}".\`);
                   return "Variable no encontrada";
                 }
               });
 
-              console.log(\`Prompt después del reemplazo: "\${promptProcesado}"\`);
+              //console.log(\`Prompt después del reemplazo: "\${promptProcesado}"\`);
               return promptProcesado;
             };
 
               // Función para procesar las tablas con prompts "IA-"
               const procesarTablasConIA = async () => {
-                console.log("=== 🔁 Iniciando procesamiento de tablas con IA ===");
+                //console.log("=== 🔁 Iniciando procesamiento de tablas con IA ===");
 
                 for (const tabla of tablas) {
-                  console.log(\`\n📋 Procesando tabla: "\${tabla.nombre}"\`);
+                  //console.log(\`📋 Procesando tabla: "\${tabla.nombre}"\`);
                   
                   // 🔍 Log inicial del estado de la tabla
-                  console.log("🧾 Estado inicial de la tabla.cuerpo:");
+                  //console.log("🧾 Estado inicial de la tabla.cuerpo:");
                   tabla.cuerpo.forEach((fila, index) => {
-                    console.log(\`Fila \${index}:\`, fila);
+                    //console.log(\`Fila \${index}:\`, fila);
                   });
 
                   const columnasIA = [];
@@ -5773,14 +5831,14 @@ router.post('/save-configuration', async (req, res) => {
                         } else {
                           promptsVistosPorColumna[key] = true;
                           columnasIA.push({ colIndex, rowIndex, rawPromptCompleto: celda });
-                          console.log(\`🔍 Detectado campo IA en fila \${rowIndex}, columna \${colIndex}: "\${celda}"\`);
+                          //console.log(\`🔍 Detectado campo IA en fila \${rowIndex}, columna \${colIndex}: "\${celda}"\`);
                         }
                       }
                     }
                   }
 
                   if (columnasIA.length === 0) {
-                    console.warn(\`⚠️ No se encontró ningún campo "IA-" en la tabla "\${tabla.nombre}".\`);
+                    //console.warn(\`⚠️ No se encontró ningún campo "IA-" en la tabla "\${tabla.nombre}".\`);
                     continue;
                   }
 
@@ -5791,8 +5849,8 @@ router.post('/save-configuration', async (req, res) => {
                     const condicion = partesPrompt.length > 3 ? partesPrompt.pop() : "S";
                     const promptSinModelo = partesPrompt.slice(2).join("-");
 
-                    console.log(\`\n🤖 Modelo IA: \${modeloIA}, Condición: \${condicion}\`);
-                    console.log(\`📄 Prompt base: "\${promptSinModelo}"\`);
+                    //console.log(\`🤖 Modelo IA: \${modeloIA}, Condición: \${condicion}\`);
+                    //console.log(\`📄 Prompt base: "\${promptSinModelo}"\`);
 
                     const regex = /{{(.*?)}}/g;
                     const variablesEncontradas = [];
@@ -5809,14 +5867,14 @@ router.post('/save-configuration', async (req, res) => {
                         ? valorCompleto.split("*").map(p => p.trim()).filter(p => p)
                         : [valorCompleto];
                       valoresVariables[variable] = partes;
-                      console.log(\`📌 Variable "\${variable}" dividida en partes (\${partes.length}):\`, partes);
+                      //console.log(\`📌 Variable "\${variable}" dividida en partes (\${partes.length}):\`, partes);
                     });
 
                     const cantidadFilas = condicion === "S"
                       ? Math.max(...Object.values(valoresVariables).map(arr => arr.length))
                       : 1;
 
-                    console.log(\`📊 Se generarán \${cantidadFilas} fila(s) para columna \${colIndex}\`);
+                    //console.log(\`📊 Se generarán \${cantidadFilas} fila(s) para columna \${colIndex}\`);
 
                     while (tabla.cuerpo.length < filaInicial + cantidadFilas) {
                       tabla.cuerpo.push(Array(tabla.cuerpo[0]?.length || 0).fill(""));
@@ -5834,17 +5892,17 @@ router.post('/save-configuration', async (req, res) => {
                       const modeloEncontrado = aiModels.find((ai) => ai.name === modeloIA);
 
                       if (!modeloEncontrado) {
-                        console.warn(\`⚠️ Modelo IA "\${modeloIA}" no encontrado.\`);
+                        //console.warn(\`⚠️ Modelo IA "\${modeloIA}" no encontrado.\`);
                         tabla.cuerpo[filaActual][colIndex] = "Modelo no encontrado";
                         continue;
                       }
 
                       try {
-                        console.log(\`➡️ Consultando GPT para fila \${filaActual}, con prompt:\`, promptProcesado);
+                        //console.log(\`➡️ Consultando GPT para fila \${filaActual}, con prompt:\`, promptProcesado);
                         const { model, personality } = modeloEncontrado;
                         const resultadoIA = await consultarGPT(model, personality, promptProcesado);
                         tabla.cuerpo[filaActual][colIndex] = resultadoIA;
-                        console.log(\`✅ Resultado GPT fila \${filaActual}, columna \${colIndex}:\`, resultadoIA);
+                        //console.log(\`✅ Resultado GPT fila \${filaActual}, columna \${colIndex}:\`, resultadoIA);
                       } catch (error) {
                         console.error(\`❌ Error al consultar GPT:\`, error);
                         tabla.cuerpo[filaActual][colIndex] = "Error al generar valor con IA";
@@ -5852,10 +5910,10 @@ router.post('/save-configuration', async (req, res) => {
                     }
                   }
 
-                  console.log(\`✅ Tabla "\${tabla.nombre}" actualizada:\`, tabla.cuerpo);
+                  //console.log(\`✅ Tabla "\${tabla.nombre}" actualizada:\`, tabla.cuerpo);
                 }
 
-                console.log("=== ✅ Finalizado procesamiento de tablas con IA ===");
+                //console.log("=== ✅ Finalizado procesamiento de tablas con IA ===");
               };
 
             // Llamar a la función para procesar las tablas IA
@@ -5867,8 +5925,8 @@ router.post('/save-configuration', async (req, res) => {
                 if (typeof value === 'string' && value.startsWith("IA-")) {
                   const [_, modeloIA, rawPrompt] = value.split('-');
 
-                  console.log(\`Procesando variable "\${key}" con modelo IA: \${modeloIA}\`);
-                  console.log(\`Prompt inicial: "\${rawPrompt}"\`);
+                  //console.log(\`Procesando variable "\${key}" con modelo IA: \${modeloIA}\`);
+                  //console.log(\`Prompt inicial: "\${rawPrompt}"\`);
 
                   // Extraer las variables dentro del prompt
                   const regex = /{{(.*?)}}/g;
@@ -5879,21 +5937,21 @@ router.post('/save-configuration', async (req, res) => {
                     variablesEncontradas.push(match[1]);
                   }
 
-                  console.log(\`Variables encontradas en el prompt: \${variablesEncontradas}\`);
+                  //console.log(\`Variables encontradas en el prompt: \${variablesEncontradas}\`);
 
                   // Reemplazar las variables en el prompt
                   const promptProcesado = rawPrompt.replace(regex, (match, variableName) => {
                     const variableValue = variables[variableName];
                     if (variableValue !== undefined) {
-                      console.log(\`Reemplazando "\${match}" con el valor: "\${variableValue}"\`);
+                      //console.log(\`Reemplazando "\${match}" con el valor: "\${variableValue}"\`);
                       return variableValue;
                     } else {
-                      console.warn(\`No se encontró la variable "\${variableName}" para el placeholder "\${match}".\`);
+                      //console.warn(\`No se encontró la variable "\${variableName}" para el placeholder "\${match}".\`);
                       return "Variable no encontrada";
                     }
                   });
 
-                  console.log(\`Prompt después del reemplazo: "\${promptProcesado}"\`);
+                  //console.log(\`Prompt después del reemplazo: "\${promptProcesado}"\`);
 
                   // Buscar el modelo en la lista de modelos disponibles
                   const modeloEncontrado = aiModels.find((ai) => ai.name === modeloIA);
@@ -5908,12 +5966,12 @@ router.post('/save-configuration', async (req, res) => {
 
                   // Consultar GPT para generar el valor
                   try {
-                    console.log(\`Consultando GPT con modelo: "\${model}", personalidad: "\${personality}"\`);
+                    //console.log(\`Consultando GPT con modelo: "\${model}", personalidad: "\${personality}"\`);
                     const resultadoIA = await consultarGPT(model, personality, promptProcesado);
 
                     // Asignar el resultado generado a la variable
                     variables[key] = resultadoIA;
-                    console.log(\`Variable "\${key}" actualizada con el valor generado por la IA:\`, resultadoIA);
+                    //console.log(\`Variable "\${key}" actualizada con el valor generado por la IA:\`, resultadoIA);
                   } catch (error) {
                     console.error(\`Error al procesar la variable "\${key}" con IA:\`, error);
                     variables[key] = "Error al generar valor con IA";
@@ -5926,7 +5984,7 @@ router.post('/save-configuration', async (req, res) => {
             await procesarVariablesIA();
 
               // 1. Obtener plantilla desde S3
-              console.log("Obteniendo plantilla...");
+              //console.log("Obteniendo plantilla...");
               const queryTemplate = 'SELECT * FROM plantillas WHERE id = $1';
               const resultTemplate = await pool.query(queryTemplate, [templateId]);
 
@@ -5936,10 +5994,10 @@ router.post('/save-configuration', async (req, res) => {
 
               const plantilla = resultTemplate.rows[0];
               const plantillaKey = decodeURIComponent(plantilla.url_archivo.split('.amazonaws.com/')[1]);
-              console.log("Clave decodificada de la plantilla en S3:", plantillaKey);
+              //console.log("Clave decodificada de la plantilla en S3:", plantillaKey);
 
               const signedUrl = await getSignedUrl(bucketName, plantillaKey);
-              console.log("URL firmada generada:", signedUrl);
+              //console.log("URL firmada generada:", signedUrl);
               const response = await fetch(signedUrl);
               if (!response.ok) throw new Error("Error al descargar la plantilla.");
 
@@ -5948,7 +6006,7 @@ router.post('/save-configuration', async (req, res) => {
               let documentXml = zip.files['word/document.xml'].asText();
 
               // 2. Procesar XML
-              console.log("Procesando documento XML...");
+              //console.log("Procesando documento XML...");
               const parsedXml = xml2js(documentXml, { compact: false, spaces: 4 });
 
               // Función para normalizar nodos de texto distribuidos
@@ -6006,7 +6064,7 @@ router.post('/save-configuration', async (req, res) => {
               
                     Object.entries(variables).forEach(([key, value]) => {
                       if (text.includes(\`{{\${key}}}\`)) {
-                        console.log(\`Reemplazando variable: {{\${key}}} con:\\n\${value}\`);
+                        //console.log(\`Reemplazando variable: {{\${key}}} con:\\n\${value}\`);
               
                         // Reemplazar la variable en el texto con su valor
                         let replacedText = text.replace(\`{{\${key}}}\`, value);
@@ -6039,7 +6097,7 @@ router.post('/save-configuration', async (req, res) => {
               
                           // Si el nodo tiene un padre, lo reemplazamos correctamente
                           if (parent && parent.elements) {
-                            console.log("Reemplazando nodo en el documento.");
+                            //console.log("Reemplazando nodo en el documento.");
                             parent.elements.splice(parent.elements.indexOf(node), 1, ...newElements);
                           }
                         } else {
@@ -6198,18 +6256,18 @@ router.post('/save-configuration', async (req, res) => {
                             
 
               const extractCellWidthsAndSpans = (row) => {
-                console.log("=== Extrayendo y reestructurando celdas ===");
+                //console.log("=== Extrayendo y reestructurando celdas ===");
 
                 const elements = row.elements;
                 const cellsToRemove = []; // Lista de índices de celdas que serán eliminadas
 
                 // Fase 1: Detectar todas las celdas y su estado
-                console.log("=== Fase 1: Detección inicial de celdas ===");
+                //console.log("=== Fase 1: Detección inicial de celdas ===");
                 const cellDetails = elements.map((cell, index) => {
                   const attributes = extractCellAttributes(cell); // Usa la función que extrae atributos de la celda
                   const isCell = cell?.name === 'w:tc'; // Confirmar si el elemento es una celda
                   if (!isCell) {
-                    console.log(\`Elemento en índice \${index} no es una celda válida. Se ignora.\`);
+                    //console.log(\`Elemento en índice \${index} no es una celda válida. Se ignora.\`);
                     return null;
                   }
 
@@ -6219,18 +6277,15 @@ router.post('/save-configuration', async (req, res) => {
                     combinedWith: [], // Inicialmente vacío
                   };
 
-                  console.log(
-                    \`Celda \${cellDetail.index}: Ancho = \${cellDetail.width}, GridSpan = \${cellDetail.gridSpan}, Atributos = \`,
-                    cellDetail
-                  );
+                  //console.log(\`Celda \${cellDetail.index}: Ancho = \${cellDetail.width}, GridSpan = \${cellDetail.gridSpan}, Atributos = \`,cellDetail);
                   return cellDetail;
                 }).filter(Boolean); // Filtrar elementos nulos o no válidos
 
                 // Fase 2: Detectar combinaciones
-                console.log("=== Fase 2: Detectar combinaciones ===");
+                //console.log("=== Fase 2: Detectar combinaciones ===");
                 cellDetails.forEach((cell, idx) => {
                   if (cell.gridSpan > 1) {
-                    console.log(\`Celda \${cell.index}: Detectada combinación con GridSpan = \${cell.gridSpan}\`);
+                    //console.log(\`Celda \${cell.index}: Detectada combinación con GridSpan = \${cell.gridSpan}\`);
                     let combinedWidth = cell.width;
 
                     // Verificar combinación hacia la derecha
@@ -6247,7 +6302,7 @@ router.post('/save-configuration', async (req, res) => {
                     }
 
                     if (isRightMerge) {
-                      console.log(\`Celda \${cell.index}: Confirmada combinación hacia la derecha.\`);
+                      //console.log(\`Celda \${cell.index}: Confirmada combinación hacia la derecha.\`);
                       // Sumar los anchos de las celdas combinadas hacia la derecha
                       for (let i = 1; i < cell.gridSpan; i++) {
                         const nextCellIndex = idx + i;
@@ -6256,7 +6311,7 @@ router.post('/save-configuration', async (req, res) => {
                         cellsToRemove.push(cellDetails[nextCellIndex].index);
                       }
                     } else {
-                      console.log(\`Celda \${cell.index}: No es posible combinar hacia la derecha. Verificando hacia la izquierda.\`);
+                      //console.log(\`Celda \${cell.index}: No es posible combinar hacia la derecha. Verificando hacia la izquierda.\`);
                       // Verificar combinación hacia la izquierda
                       for (let i = 1; i < cell.gridSpan; i++) {
                         const prevCellIndex = idx - i;
@@ -6270,41 +6325,35 @@ router.post('/save-configuration', async (req, res) => {
                     }
 
                     cell.width = combinedWidth;
-                    console.log(
-                      \`Celda \${cell.index}: Combinada con \${cell.combinedWith.join(", ")}. Ancho combinado = \${cell.width}\`
-                    );
+                    //console.log(\`Celda \${cell.index}: Combinada con \${cell.combinedWith.join(", ")}. Ancho combinado = \${cell.width}\`);
                   }
                 });
 
                 // Fase 3: Registrar celdas a eliminar
-                console.log("=== Fase 3: Celdas a eliminar ===");
-                console.log(\`Celdas que serán eliminadas: \${[...new Set(cellsToRemove)].join(", ")}\`);
+                //console.log("=== Fase 3: Celdas a eliminar ===");
+                //console.log(\`Celdas que serán eliminadas: \${[...new Set(cellsToRemove)].join(", ")}\`);
 
                 // Fase 4: Filtrar celdas restantes
-                console.log("=== Fase 4: Filtrar celdas restantes ===");
+                //console.log("=== Fase 4: Filtrar celdas restantes ===");
                 const remainingCells = cellDetails.filter(
                   (cell) => !cellsToRemove.includes(cell.index)
                 );
 
-                console.log("Celdas restantes:");
-                remainingCells.forEach((cell) =>
-                  console.log(\`Celda \${cell.index}: Ancho = \${cell.width}, GridSpan = \${cell.gridSpan}\`)
-                );
+                //console.log("Celdas restantes:");
+                //remainingCells.forEach((cell) =>console.log(\`Celda \${cell.index}: Ancho = \${cell.width}, GridSpan = \${cell.gridSpan}\`));
 
                 // Fase 5: Reordenar índices de celdas
-                console.log("=== Fase 5: Reordenar índices ===");
+                //console.log("=== Fase 5: Reordenar índices ===");
                 const reorderedCells = remainingCells.map((cell, newIndex) => {
-                  console.log(\`Celda original \${cell.index} ahora es Celda \${newIndex + 1}\`);
+                  //console.log(\`Celda original \${cell.index} ahora es Celda \${newIndex + 1}\`);
                   return {
                     ...cell,
                     index: newIndex + 1,
                   };
                 });
 
-                console.log("Celdas reestructuradas finales:");
-                reorderedCells.forEach((cell) =>
-                  console.log(\`Celda \${cell.index}: Ancho = \${cell.width}, GridSpan = \${cell.gridSpan}\`)
-                );
+                //console.log("Celdas reestructuradas finales:");
+                //reorderedCells.forEach((cell) =>console.log(\`Celda \${cell.index}: Ancho = \${cell.width}, GridSpan = \${cell.gridSpan}\`));
 
                 // Retornar las celdas reestructuradas
                 return reorderedCells.map((cell) => ({
@@ -6315,7 +6364,7 @@ router.post('/save-configuration', async (req, res) => {
               
             // Función para crear una fila de tabla con bordes opcionales
             const createRow = (values, cellStyles = [], withBorders = true) => {
-              console.log("=== Creando nueva fila ===");
+              //console.log("=== Creando nueva fila ===");
               return {
                 type: 'element',
                 name: 'w:tr',
@@ -6331,11 +6380,7 @@ router.post('/save-configuration', async (req, res) => {
                     verticalAlign,
                   } = cellStyles[index] || { widthAttributes: { 'w:w': '2000', 'w:type': 'dxa' }, gridSpan: 1 };
             
-                  console.log(
-                    \`Celda \${index + 1}: Aplicando atributos\`,
-                    widthAttributes,
-                    \`GridSpan: \${gridSpan}, TextColor: \${textColor}, BgColor: \${bgColor}, FontStyle: \${fontStyle}, FontSize: \${fontSize}, TextAlign: \${textAlign}, VerticalAlign: \${verticalAlign}\`
-                  );
+                  //console.log(\`Celda \${index + 1}: Aplicando atributos\`,widthAttributes,\`GridSpan: \${gridSpan}, TextColor: \${textColor}, BgColor: \${bgColor}, FontStyle: \${fontStyle}, FontSize: \${fontSize}, TextAlign: \${textAlign}, VerticalAlign: \${verticalAlign}\`);
             
                   const gridSpanElement =
                     gridSpan > 1
@@ -6557,13 +6602,13 @@ router.post('/save-configuration', async (req, res) => {
               const replaceTableValues = (nodes, tables) => {
                 nodes.forEach((node) => {
                   if (node.type === 'element' && node.name === 'w:tbl') {
-                    console.log("=== Tabla detectada ===");
+                    //console.log("=== Tabla detectada ===");
 
                     tables.forEach(({ encabezado, cuerpo }) => {
                       // Extraer las filas de la tabla
                       const tableRows = node.elements.filter((child) => child.name === 'w:tr');
                       if (!tableRows.length) {
-                        console.log("No se encontraron filas en la tabla.");
+                        //console.log("No se encontraron filas en la tabla.");
                         return;
                       }
 
@@ -6572,8 +6617,8 @@ router.post('/save-configuration', async (req, res) => {
                       const bodyRows = tableRows.slice(1);
                       const headerTexts = extractRowTexts(headerRow);
 
-                      console.log("Encabezado encontrado en tabla:", headerTexts);
-                      console.log("Encabezado esperado:", encabezado.flat());
+                      //console.log("Encabezado encontrado en tabla:", headerTexts);
+                      //console.log("Encabezado esperado:", encabezado.flat());
 
                       // Función para calcular la distancia de Levenshtein
                       const levenshteinDistance = (a, b) => {
@@ -6604,12 +6649,12 @@ router.post('/save-configuration', async (req, res) => {
                       const isMatchingTable = headerTexts.every((text, index) => {
                         const expectedHeader = encabezado.flat()[index] || '';
                         const isSimilar = areHeadersSimilar(text, expectedHeader);
-                        console.log(\`Comparando: '\${text}' con '\${expectedHeader}' -> Similitud: \${isSimilar}\`);
+                        //console.log(\`Comparando: '\${text}' con '\${expectedHeader}' -> Similitud: \${isSimilar}\`);
                         return isSimilar;
                       });
 
                       if (isMatchingTable) {
-                        console.log("La tabla coincide con el encabezado. Reemplazando filas...");
+                        //console.log("La tabla coincide con el encabezado. Reemplazando filas...");
 
                         // Agregar bordes al encabezado original sin perder estilos
                         addBordersToRow(headerRow);
@@ -6627,9 +6672,9 @@ router.post('/save-configuration', async (req, res) => {
                         // Reemplazar las filas antiguas con el encabezado y nuevas filas
                         node.elements = updatedRows;
 
-                        console.log("Tabla actualizada correctamente.");
+                        //console.log("Tabla actualizada correctamente.");
                       } else {
-                        console.log("La tabla no coincide con el encabezado esperado. Se omite.");
+                        //console.log("La tabla no coincide con el encabezado esperado. Se omite.");
                       }
                     });
                   }
@@ -6672,7 +6717,7 @@ router.post('/save-configuration', async (req, res) => {
                   currentNode = currentNode.parent; // Subir al nodo padre
               }
 
-              console.warn(\`No se encontró el ancestro "\${ancestorName}" ni su ancho. Usando valor por defecto.\`);
+              //console.warn(\`No se encontró el ancestro "\${ancestorName}" ni su ancho. Usando valor por defecto.\`);
               cellWidthEMU = defaultWidthEMU;
               return false;
             };
@@ -6685,7 +6730,7 @@ router.post('/save-configuration', async (req, res) => {
                   if (tcW && tcW.attributes?.["w:w"]) {
                       const widthTwips = parseInt(tcW.attributes["w:w"], 10);
                       cellWidthEMU = widthTwips * 600; // Convertir twips a EMU
-                      console.log(\`Ancho de celda encontrado: \${cellWidthEMU} EMU\`);
+                      //console.log(\`Ancho de celda encontrado: \${cellWidthEMU} EMU\`);
                       return true;
                   }
               }
@@ -6703,7 +6748,7 @@ router.post('/save-configuration', async (req, res) => {
                       const columnIndex = rowNode.elements.indexOf(cellNode); // Posición de la celda actual en su fila
                       const firstCell = firstRow.elements?.filter(el => el.name === "w:tc")[columnIndex]; // Celda correspondiente
                       if (firstCell) {
-                          console.log(\`Buscando ancho en la primera celda de la columna en índice: \${columnIndex}\`);
+                          //console.log(\`Buscando ancho en la primera celda de la columna en índice: \${columnIndex}\`);
                           const tcPr = firstCell.elements?.find(el => el.name === "w:tcPr");
                           const tcW = tcPr?.elements?.find(el => el.name === "w:tcW");
                           if (tcW && tcW.attributes?.["w:w"]) {
@@ -6729,13 +6774,13 @@ router.post('/save-configuration', async (req, res) => {
                         .map(el => el.text)
                         .join("") || "";
 
-                      console.log("Texto encontrado:", fullText);
+                      //console.log("Texto encontrado:", fullText);
 
                       const isInTableCell = findAncestorNode(node, "w:tc");
-                      console.log("¿Está dentro de una celda de tabla?", isInTableCell);
+                      //console.log("¿Está dentro de una celda de tabla?", isInTableCell);
 
                       if (isImageUrl(fullText)) {
-                        console.log(">> Se detectó una URL de imagen:", fullText);
+                        //console.log(">> Se detectó una URL de imagen:", fullText);
                       
                         try {
                           // Extraer la clave del archivo en S3 desde la URL
@@ -6743,12 +6788,12 @@ router.post('/save-configuration', async (req, res) => {
                           const imageKey = rawPath.split("?")[0]; // eliminar query string
                           const imageName = imageKey.split("/").pop();
                       
-                          console.log("Clave decodificada de la imagen:", imageKey);
-                          console.log("Nombre de la imagen:", imageName);
+                          //console.log("Clave decodificada de la imagen:", imageKey);
+                          //console.log("Nombre de la imagen:", imageName);
                       
                           // Obtener la URL firmada desde la clave
                           const imageUrl = await getSignedUrl(bucketName, imageKey);
-                          console.log("URL firmada generada:", imageUrl);
+                          //console.log("URL firmada generada:", imageUrl);
                       
                           // Descargar la imagen usando la URL firmada
                           const response = await fetch(imageUrl);
@@ -6756,16 +6801,16 @@ router.post('/save-configuration', async (req, res) => {
                           const imageBuffer = await response.arrayBuffer();
                       
                           const { width, height } = await sharp(Buffer.from(imageBuffer)).metadata();
-                          console.log("Dimensiones obtenidas:", { width, height });
+                          //console.log("Dimensiones obtenidas:", { width, height });
                       
                           await addImageToDocx(zip, imageUrl, imageName);
-                          console.log(\`Imagen agregada a "word/media/\${imageName}"\`);
+                          //console.log(\`Imagen agregada a "word/media/\${imageName}"\`);
                       
                           const aspectRatio = height / width;
                           const newHeightEMU = Math.round(cellWidthEMU * aspectRatio);
                       
                           const imageId = addImageRelationship(zip, imageName);
-                          console.log("ID de relación generado:", imageId);
+                          //console.log("ID de relación generado:", imageId);
                       
                           node.name = "w:drawing";
                           node.elements = [
@@ -6833,7 +6878,7 @@ router.post('/save-configuration', async (req, res) => {
                         }
                       }
                       else {
-                        console.log(">> No es una URL de imagen válida o no detectada");
+                        //console.log(">> No es una URL de imagen válida o no detectada");
                       }
                     }
 
@@ -6848,7 +6893,7 @@ router.post('/save-configuration', async (req, res) => {
                   return typeof url === "string" && /amazonaws\.com/.test(url);
                 }
 
-                console.log("=== Iniciando proceso de reemplazo de URLs por imágenes ===");
+                //console.log("=== Iniciando proceso de reemplazo de URLs por imágenes ===");
                 // Agregar namespaces necesarios
                 parsedXml.elements[0].attributes = {
                   ...parsedXml.elements[0].attributes,
@@ -6856,7 +6901,7 @@ router.post('/save-configuration', async (req, res) => {
                   "xmlns:pic": "http://schemas.openxmlformats.org/drawingml/2006/picture"
                 };
                 await processNodesForImages(parsedXml.elements, null);
-                console.log("=== Proceso de reemplazo de URLs por imágenes completado ===");
+                //console.log("=== Proceso de reemplazo de URLs por imágenes completado ===");
 
                 // Guardar el XML actualizado para depuración
                 const updatedXml = js2xml(parsedXml, { compact: false, spaces: 4 });
@@ -6952,7 +6997,7 @@ router.post('/save-configuration', async (req, res) => {
             };  
             
               // Procesar y reemplazar variables y tablas
-              console.log("Procesando documento XML...");
+              //console.log("Procesando documento XML...");
               normalizeTextNodes(parsedXml.elements);
               replaceVariables(parsedXml.elements); // Reemplaza variables
               replaceTableValues(parsedXml.elements, tablas); // Reemplaza valores en tablas
@@ -6967,14 +7012,14 @@ router.post('/save-configuration', async (req, res) => {
               zip.file("word/document.xml", updatedXml);
 
               // Reemplazar URLs con imágenes en el documento actualizado
-              console.log("Revisando y reemplazando imágenes en el documento...");
+              //console.log("Revisando y reemplazando imágenes en el documento...");
               await replaceImageUrlsWithImages(zip);
 
               const updatedBuffer = zip.generate({ type: 'nodebuffer' });
               const newKey = \`documents/generated/\${Date.now()}-generated.docx\`;
               const uploadResult = await uploadFile(bucketName, newKey, updatedBuffer);
 
-              console.log("Documento generado con éxito:", uploadResult.Location);
+              //console.log("Documento generado con éxito:", uploadResult.Location);
               const documentUrl = uploadResult.Location;
 
               let generatedDocumentId = '';
@@ -7020,7 +7065,7 @@ router.post('/save-configuration', async (req, res) => {
           `;
 
     console.log("=== Código generado ===");
-    console.log(generatedCode);
+    //console.log(generatedCode);
 
     // Guardar la configuración y el código generado en la base de datos
     const insertQuery = `
@@ -7133,11 +7178,14 @@ router.post('/create-document-client', async (req, res) => {
   }
 });
 
-// Ruta para ejecutar código dinámico almacenado
+// Ruta para ejecutar código dinámico almacenado (para servicios)
 router.post('/create-document-service', async (req, res) => {
   const { idEntity, id } = req.body; // Recibir ID de la entidad e ID de configuración
+
+  console.log("Identificador único de solicitud:", req.body.uniqueId);
+
   try {
-    console.log("=== Iniciando ejecución de configuración almacenada ===");
+    console.log("=== Iniciando ejecución de configuración almacenada (SERVICIO) ===");
 
     // Validar entradas requeridas
     if (!idEntity || !id) {
@@ -7160,25 +7208,24 @@ router.post('/create-document-service', async (req, res) => {
 
     // Preparar el sandbox
     const sandbox = {
-      console: console, // Permite console.log
-      require: require, // Permite require
-      idEntity: idEntity, // ID de la entidad
-      pool: pool, // Conexión a la base de datos
-      fetch: fetch, // Para descargar archivos desde S3
-      PizZip: require('pizzip'), // Librería para manejar archivos .docx
-      xml2js: require('xml-js').xml2js, // Parsear XML a JSON
-      js2xml: require('xml-js').js2xml, // Convertir JSON a XML
-      getSignedUrl: getSignedUrl, // Función para obtener URLs firmadas de S3
-      uploadFile: uploadFile, // Función para subir archivos a S3
-      bucketName: "impecol", // Nombre del bucket S3
-      Buffer: Buffer, // Agregar Buffer al sandbox
+      console: console,
+      require: require,
+      idEntity: idEntity,
+      pool: pool,
+      fetch: fetch,
+      PizZip: require('pizzip'),
+      xml2js: require('xml-js').xml2js,
+      js2xml: require('xml-js').js2xml,
+      getSignedUrl: getSignedUrl,
+      uploadFile: uploadFile,
+      bucketName: "impecol",
+      Buffer: Buffer,
       sharp,
       moment,
       axios,
       process: { env: process.env },
     };
 
-    // Crear un script envolviendo el código generado en una función `async`
     const script = new vm.Script(`
       (async () => {
         ${generated_code}
@@ -7187,14 +7234,34 @@ router.post('/create-document-service', async (req, res) => {
     `);
 
     const context = vm.createContext(sandbox);
-    script.runInContext(context);
 
-    console.log("Código ejecutado exitosamente.");
+    // Esperar resultado del script
+    const documentUrl = await script.runInContext(context);
 
-    res.status(200).json({ message: "Código ejecutado correctamente.", executed: true });
+    console.log("Código ejecutado exitosamente. URL del documento:", documentUrl);
+
+    // Prefirmar el documento
+    const response = await axios.post(`${process.env.BACKEND_URL}/api/PrefirmarArchivos`, {
+      url: documentUrl,
+    });
+
+    const signedUrl = response.data.signedUrl;
+    console.log("URL prefirmada obtenida:", signedUrl);
+
+    return res.status(200).json({
+      message: "Código ejecutado correctamente.",
+      executed: true,
+      success: true,
+      documentUrl,
+      signedUrl,
+    });
   } catch (error) {
-    console.error("Error al ejecutar el código generado:", error.message);
-    res.status(500).json({ message: "Error interno del servidor", error: error.message });
+    console.error("❌ Error al ejecutar el código generado:", error.message);
+    return res.status(500).json({
+      message: "Error interno del servidor",
+      error: error.message,
+      success: false,
+    });
   }
 });
 
@@ -8103,6 +8170,93 @@ router.post('/get-onlyoffice-config', upload.single('file'), async (req, res) =>
   } catch (err) {
     console.error('❌ Error generando configuración OnlyOffice:', err);
     res.status(500).send('Error interno al generar configuración OnlyOffice');
+  }
+});
+
+router.post('/consumptions', async (req, res) => {
+  console.log("Registrando consumo...");
+
+  const { api_name, model, unit_type, unit_count, query_details } = req.body;
+
+  if (!api_name || !model || !unit_type || !unit_count || !query_details) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+
+  try {
+    // 1. Obtener costo unitario
+    const pricingQuery = `
+      SELECT cost_per_unit 
+      FROM api_pricing_models 
+      WHERE api_name = $1 AND model = $2 AND unit_type = $3
+    `;
+    const pricingResult = await pool.query(pricingQuery, [api_name, model, unit_type]);
+
+    if (pricingResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No se encontró el precio para esta combinación de API, modelo y tipo de unidad' });
+    }
+
+    const cost_per_unit = pricingResult.rows[0].cost_per_unit;
+
+    // 2. Calcular costos
+    const query_cost = cost_per_unit * unit_count;
+    const sales_value = query_cost * 7;
+
+    // 3. Insertar registro
+    const insertQuery = `
+      INSERT INTO api_consumptions 
+        (api_name, query_details, query_cost, sales_value, model, unit_count, query_date, query_time)
+      VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE, CURRENT_TIME)
+      RETURNING *;
+    `;
+
+    const insertResult = await pool.query(insertQuery, [
+      api_name,
+      query_details,
+      query_cost,
+      sales_value,
+      model,
+      unit_count
+    ]);
+
+    res.status(201).json({
+      message: 'Consumo registrado exitosamente',
+      consumption: insertResult.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error al insertar consumo:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+router.get('/consumptions', async (req, res) => {
+  const { month, year } = req.query;
+
+  if (!month || !year) {
+    return res.status(400).json({ error: 'month y year son requeridos' });
+  }
+
+  try {
+    const startDate = new Date(year, month - 1, 1); // Día 1 del mes
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999); // Último día del mes
+
+    const query = `
+      SELECT 
+        query_date AS query_day,
+        model,
+        SUM(sales_value) AS total_sales_value
+      FROM api_consumptions
+      WHERE query_date BETWEEN $1 AND $2
+      GROUP BY query_day, model
+      ORDER BY query_day;
+    `;
+
+    const result = await pool.query(query, [startDate, endDate]);
+
+    return res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener los consumos:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
