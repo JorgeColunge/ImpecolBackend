@@ -4943,7 +4943,7 @@ router.post('/save-configuration', async (req, res) => {
                         case "last_3_months":
                           return serviceDate.isAfter(now.clone().subtract(2, 'months'));
                         case "last_month":
-                          return serviceDate.isSame(now.clone().subtract(0, 'month'), 'month');
+                          return serviceDate.isSame(now.clone().subtract(1, 'month'), 'month');
                         case "this_week":
                           return serviceDate.isSame(now, 'week');
                         default:
@@ -5029,7 +5029,7 @@ router.post('/save-configuration', async (req, res) => {
                           case "last_3_months":
                             return inspectionDate.isAfter(now.clone().subtract(2, 'months'));
                           case "last_month":
-                            return inspectionDate.isSame(now.clone().subtract(0, 'month'), 'month');
+                            return inspectionDate.isSame(now.clone().subtract(1, 'month'), 'month');
                           case "this_week":
                             return inspectionDate.isSame(now, 'week');
                           default:
@@ -5128,7 +5128,7 @@ router.post('/save-configuration', async (req, res) => {
                             case "last_3_months":
                               return inspectionDate.isAfter(now.clone().subtract(2, 'months'));
                             case "last_month":
-                              return inspectionDate.isSame(now.clone().subtract(0, 'month'), 'month');
+                              return inspectionDate.isSame(now.clone().subtract(1, 'month'), 'month');
                             case "this_week":
                               return inspectionDate.isSame(now, 'week');
                             default:
@@ -5313,7 +5313,7 @@ router.post('/save-configuration', async (req, res) => {
                             case "last_3_months":
                               return inspectionDate.isAfter(now.clone().subtract(2, 'months'));
                             case "last_month":
-                              return inspectionDate.isSame(now.clone().subtract(0, 'month'), 'month');
+                              return inspectionDate.isSame(now.clone().subtract(1, 'month'), 'month');
                             case "this_week":
                               return inspectionDate.isSame(now, 'week');
                             default:
@@ -5435,7 +5435,7 @@ router.post('/save-configuration', async (req, res) => {
                                 case "last_3_months":
                                   return inspectionDate.isAfter(now.clone().subtract(2, 'months'));
                                 case "last_month":
-                                  return inspectionDate.isSame(now.clone().subtract(0, 'month'), 'month');
+                                  return inspectionDate.isSame(now.clone().subtract(1, 'month'), 'month');
                                 case "this_week":
                                   return inspectionDate.isSame(now, 'week');
                                 default:
@@ -8245,7 +8245,7 @@ router.get('/consumptions', async (req, res) => {
         query_date AS query_day,
         model,
         SUM(sales_value) AS total_sales_value
-      FROM api_consumptions
+      FROM public.api_consumptions
       WHERE query_date BETWEEN $1 AND $2
       GROUP BY query_day, model
       ORDER BY query_day;
