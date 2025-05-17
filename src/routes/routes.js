@@ -8280,7 +8280,7 @@ router.post('/enviar-botix-acta', async (req, res) => {
 
     console.log("📁 Archivo guardado en:", localPath);
 
-    const publicUrl = `https://services.impecol.com/temp/${fileName}`;
+    const publicUrl = `https://services.impecol.com:10000/temp/${fileName}`;
 
     // 2. Preparar datos para enviar a Botix
     const externalData = {
