@@ -8260,5 +8260,64 @@ router.get('/consumptions', async (req, res) => {
   }
 });
 
+router.post('/enviar-botix-acta', async (req, res) => {
+  try {
+    const { nombre, telefono, documento, nombreDocumento } = req.body;
+    console.log("📞 Teléfono recibido:", telefono);
+
+    // 1. Descargar el documento a /temp
+    const fileName = `${uuidv4()}-${nombreDocumento.replace(/\s+/g, '_')}`;
+    const localPath = path.join(__dirname, '../temp', fileName);
+    const writer = fs.createWriteStream(localPath);
+
+    const responseStream = await axios.get(documento, { responseType: 'stream' });
+    responseStream.data.pipe(writer);
+
+    await new Promise((resolve, reject) => {
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+
+    console.log("📁 Archivo guardado en:", localPath);
+
+    const publicUrl = `https://services.impecol.com/temp/${fileName}`;
+
+    // 2. Preparar datos para enviar a Botix
+    const externalData = {
+      acta: {
+        nombre,
+        telefono,
+        url: publicUrl,
+        documento: nombreDocumento
+      },
+      botCredentials: {
+        email: 'enviar.acta@impecolsas.botix',
+        password: '...tu clave segura...'
+      }
+    };
+
+    // 3. Enviar a Botix
+    const botixResponse = await axios.post('https://botix360.com:10000/bot', externalData, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    console.log('✅ Respuesta de Botix:', botixResponse.data);
+
+    // 4. Eliminar el archivo de /temp
+    try {
+      fs.unlinkSync(localPath);
+      console.log("🗑 Archivo eliminado:", localPath);
+    } catch (err) {
+      console.warn("⚠️ No se pudo eliminar el archivo:", err.message);
+    }
+
+    res.json({ success: true, botixResponse: botixResponse.data });
+
+  } catch (error) {
+    console.error('❌ Error al enviar a Botix:', error.response?.data || error.message);
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+});
+
 
 module.exports = router;
