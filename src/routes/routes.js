@@ -8292,7 +8292,7 @@ router.post('/enviar-botix-acta', async (req, res) => {
       },
       botCredentials: {
         email: 'enviar.acta@impecolsas.botix',
-        password: '...tu clave segura...'
+        password: '$<JCAwC:x.m7xh8UFg9kpMW<z4%18ZcH3wFcVFh_UaQ:.q:X{2x9wt6ZJw(9,M94@5jvStg_R}cVeqr1u[R2&Y6tYCDY/@M<Ol#F'
       }
     };
 
