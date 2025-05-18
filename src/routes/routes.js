@@ -22,6 +22,7 @@ const { convertToPDF } = require("../config/convertToPDF");
 const unzipper = require("unzipper");
 const parser = new xml2js.Parser({ explicitArray: false });
 const jwt = require("jsonwebtoken");
+const url = require('url');
 
 const { exec } = require('child_process');
 
