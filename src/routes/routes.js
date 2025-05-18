@@ -8260,17 +8260,34 @@ router.get('/consumptions', async (req, res) => {
   }
 });
 
+// 🔧 Extrae extensión de la URL sin query params
+const getExtensionFromUrl = (s3Url) => {
+  const pathname = url.parse(s3Url).pathname;
+  return path.extname(pathname) || '.docx'; // fallback .docx
+};
+
 router.post('/enviar-botix-acta', async (req, res) => {
   try {
     const { nombre, telefono, documento, nombreDocumento } = req.body;
     console.log("📞 Teléfono recibido:", telefono);
+    let downloadUrl = documento;
 
-    // 1. Descargar el documento a /temp
-    const fileName = `${uuidv4()}-${nombreDocumento.replace(/\s+/g, '_')}`;
+    // 1. Si no tiene firma, se la agregamos
+    if (!documento.includes('X-Amz-Signature')) {
+      console.log('🔐 Generando pre-firma para URL no firmada...');
+      const prefirm = await axios.post(`${process.env.REACT_APP_API_URL}/PrefirmarArchivos`, { url: documento });
+      downloadUrl = prefirm.data.signedUrl;
+    }
+
+    // 2. Descargar el documento y guardarlo en /temp
+    const extension = getExtensionFromUrl(downloadUrl); // .docx, .pdf, etc.
+    const safeName = nombreDocumento.replace(/\s+/g, '_');
+    const fileName = `${uuidv4()}-${safeName}${extension}`;
     const localPath = path.join(__dirname, '../temp', fileName);
     const writer = fs.createWriteStream(localPath);
 
-    const responseStream = await axios.get(documento, { responseType: 'stream' });
+    console.log("⬇️ Descargando archivo desde:", downloadUrl);
+    const responseStream = await axios.get(downloadUrl, { responseType: 'stream' });
     responseStream.data.pipe(writer);
 
     await new Promise((resolve, reject) => {
@@ -8280,9 +8297,10 @@ router.post('/enviar-botix-acta', async (req, res) => {
 
     console.log("📁 Archivo guardado en:", localPath);
 
+    // 3. Construir URL pública accesible
     const publicUrl = `https://services.impecol.com:10000/temp/${fileName}`;
 
-    // 2. Preparar datos para enviar a Botix
+    // 4. Armar payload y enviar a Botix
     const externalData = {
       acta: {
         nombre,
@@ -8296,14 +8314,13 @@ router.post('/enviar-botix-acta', async (req, res) => {
       }
     };
 
-    // 3. Enviar a Botix
     const botixResponse = await axios.post('https://botix360.com:10000/bot', externalData, {
       headers: { 'Content-Type': 'application/json' }
     });
 
     console.log('✅ Respuesta de Botix:', botixResponse.data);
 
-    // 4. Eliminar el archivo de /temp
+    // 5. Eliminar archivo local (comentado por ahora)
     /*
     try {
       fs.unlinkSync(localPath);
@@ -8311,7 +8328,7 @@ router.post('/enviar-botix-acta', async (req, res) => {
     } catch (err) {
       console.warn("⚠️ No se pudo eliminar el archivo:", err.message);
     }
-      */
+    */
 
     res.json({ success: true, botixResponse: botixResponse.data });
 
