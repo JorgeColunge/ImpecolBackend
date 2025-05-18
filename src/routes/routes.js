@@ -8322,14 +8322,12 @@ router.post('/enviar-botix-acta', async (req, res) => {
     console.log('✅ Respuesta de Botix:', botixResponse.data);
 
     // 5. Eliminar archivo local (comentado por ahora)
-    /*
     try {
       fs.unlinkSync(localPath);
       console.log("🗑 Archivo eliminado:", localPath);
     } catch (err) {
       console.warn("⚠️ No se pudo eliminar el archivo:", err.message);
     }
-    */
 
     res.json({ success: true, botixResponse: botixResponse.data });
 
