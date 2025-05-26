@@ -8321,13 +8321,15 @@ router.post('/enviar-botix-acta', async (req, res) => {
 
     console.log('✅ Respuesta de Botix:', botixResponse.data);
 
-    /*// 5. Eliminar archivo local (comentado por ahora)
-    try {
-      fs.unlinkSync(localPath);
-      console.log("🗑 Archivo eliminado:", localPath);
-    } catch (err) {
-      console.warn("⚠️ No se pudo eliminar el archivo:", err.message);
-    }*/
+    // 5. Eliminar archivo local después de 3 minutos
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(localPath);
+        console.log("🗑 Archivo eliminado tras 3 minutos:", localPath);
+      } catch (err) {
+        console.warn("⚠️ No se pudo eliminar el archivo:", err.message);
+      }
+    }, 180000); // 180000 ms = 3 minutos
 
     res.json({ success: true, botixResponse: botixResponse.data });
 
