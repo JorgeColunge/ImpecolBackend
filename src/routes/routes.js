@@ -8279,7 +8279,7 @@ router.post('/enviar-botix-acta', async (req, res) => {
     if (!documento.includes('X-Amz-Signature')) {
       try {
         console.log('🔐 Generando pre-firma para URL no firmada...');
-        const prefirm = await axios.post(`${process.env.BACKEND_URL}/PrefirmarArchivos`, { url: documento });
+        const prefirm = await axios.post(`${process.env.BACKEND_URL}/api/PrefirmarArchivos`, { url: documento });
         downloadUrl = prefirm.data.signedUrl;
         console.log("✅ URL firmada generada:", downloadUrl);
       } catch (e) {
