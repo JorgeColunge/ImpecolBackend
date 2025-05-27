@@ -8271,13 +8271,21 @@ router.post('/enviar-botix-acta', async (req, res) => {
   try {
     const { nombre, telefono, documento, nombreDocumento } = req.body;
     console.log("📞 Teléfono recibido:", telefono);
+    console.log("📄 Documento recibido:", documento);
+    console.log("📄 Nombre del documento:", nombreDocumento);
     let downloadUrl = documento;
 
     // 1. Si no tiene firma, se la agregamos
     if (!documento.includes('X-Amz-Signature')) {
-      console.log('🔐 Generando pre-firma para URL no firmada...');
-      const prefirm = await axios.post(`${process.env.REACT_APP_API_URL}/PrefirmarArchivos`, { url: documento });
-      downloadUrl = prefirm.data.signedUrl;
+      try {
+        console.log('🔐 Generando pre-firma para URL no firmada...');
+        const prefirm = await axios.post(`${process.env.REACT_APP_API_URL}/PrefirmarArchivos`, { url: documento });
+        downloadUrl = prefirm.data.signedUrl;
+        console.log("✅ URL firmada generada:", downloadUrl);
+      } catch (e) {
+        console.error("❌ Error generando la URL firmada:", e.message);
+        return res.status(400).json({ error: "URL inválida o no se pudo firmar" });
+      }
     }
 
     // 2. Descargar el documento y guardarlo en /temp
@@ -8288,18 +8296,24 @@ router.post('/enviar-botix-acta', async (req, res) => {
     const writer = fs.createWriteStream(localPath);
 
     console.log("⬇️ Descargando archivo desde:", downloadUrl);
-    const responseStream = await axios.get(downloadUrl, { responseType: 'stream' });
-    responseStream.data.pipe(writer);
+    try {
+      const responseStream = await axios.get(downloadUrl, { responseType: 'stream' });
+      responseStream.data.pipe(writer);
 
-    await new Promise((resolve, reject) => {
-      writer.on('finish', resolve);
-      writer.on('error', reject);
-    });
+      await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
 
-    console.log("📁 Archivo guardado en:", localPath);
+      console.log("📁 Archivo guardado en:", localPath);
+    } catch (e) {
+      console.error("❌ Error al descargar el archivo:", e.message);
+      return res.status(400).json({ error: "No se pudo descargar el archivo" });
+    }
 
     // 3. Construir URL pública accesible
-    const publicUrl = `https://services.impecol.com:10000/temp/${fileName}`;
+    const publicUrl = encodeURI(`https://services.impecol.com:10000/temp/${fileName}`);
+    console.log("🌐 URL pública construida:", publicUrl);
 
     // 4. Armar payload y enviar a Botix
     const externalData = {
@@ -8315,7 +8329,12 @@ router.post('/enviar-botix-acta', async (req, res) => {
       }
     };
 
-    const botixResponse = await axios.post('https://botix360.com:10000/bot', externalData, {
+    console.log("📦 Payload a enviar a Botix:", JSON.stringify(externalData, null, 2));
+
+    const urlBotix = 'https://botix360.com:10000/bot';
+    console.log("📤 URL destino a Botix:", urlBotix);
+
+    const botixResponse = await axios.post(urlBotix, externalData, {
       headers: { 'Content-Type': 'application/json' }
     });
 
@@ -8334,10 +8353,9 @@ router.post('/enviar-botix-acta', async (req, res) => {
     res.json({ success: true, botixResponse: botixResponse.data });
 
   } catch (error) {
-    console.error('❌ Error al enviar a Botix:', error.response?.data || error.message);
+    console.error('❌ Error general al enviar a Botix:', error.response?.data || error.message);
     res.status(500).json({ success: false, error: error.response?.data || error.message });
   }
 });
-
 
 module.exports = router;
