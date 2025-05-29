@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const multer = require('multer');
 const sharp = require('sharp');
 const moment = require('moment-timezone');
+const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const AWS = require('aws-sdk');
@@ -166,6 +167,34 @@ async function generateSignedUrl(url) {
   }
 }
 
+// Función para generar URL prefirmada
+async function generateSignedUrlPDF(url) {
+  try {
+    // Extraer el bucket y el key desde la URL
+    const urlParts = new URL(url);
+
+    const bucketName = urlParts.hostname.split('.')[0]; // Extraer el nombre del bucket
+    const key = decodeURIComponent(
+      urlParts.pathname.startsWith('/') ? urlParts.pathname.substring(1) : urlParts.pathname
+    );
+
+    const params = {
+      Bucket: bucketName,
+      Key: key,
+      Expires: 60, // Tiempo en segundos (ejemplo: 60 segundos)
+      ResponseContentDisposition: 'inline', // 👈 ¡Esto permite verlo en el navegador!
+      ResponseContentType: 'application/pdf' // 👈 Asegura que sea tratado como PDF
+    };
+
+    // Generar URL prefirmada
+    return await s3.getSignedUrlPromise('getObject', params);
+  } catch (error) {
+    console.error('Error al generar URL prefirmada:', error);
+    throw new Error('No se pudo generar la URL prefirmada.');
+  }
+}
+
+
 // Ruta para prefirmar documentos de S3
 router.post('/PrefirmarArchivos', async (req, res) => {
   const { url } = req.body;
@@ -179,6 +208,29 @@ router.post('/PrefirmarArchivos', async (req, res) => {
 
   try {
     const signedUrl = await generateSignedUrl(url);
+    console.log('Archivo encontrado y URL prefirmada generada con éxito.');
+    console.log(`URL prefirmada: ${signedUrl}`);
+
+    res.json({ signedUrl });
+  } catch (error) {
+    console.error('Error al generar la URL prefirmada:', error.message);
+    res.status(500).json({ message: 'Error al generar la URL prefirmada.', error: error.message });
+  }
+});
+
+// Ruta para prefirmar documentos de S3
+router.post('/PrefirmarArchivosPDF', async (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    console.error('URL no proporcionada en la solicitud.');
+    return res.status(400).json({ message: 'La URL es requerida.' });
+  }
+
+  console.log(`Recibida solicitud para prefirmar archivo con URL: ${url}`);
+
+  try {
+    const signedUrl = await generateSignedUrlPDF(url);
     console.log('Archivo encontrado y URL prefirmada generada con éxito.');
     console.log(`URL prefirmada: ${signedUrl}`);
 
@@ -2411,6 +2463,82 @@ router.get('/actions-clients', async (req, res) => {
   }
 });
 
+// Ruta para obtener todas las acciones
+router.get('/actions', async (req, res) => {
+  try {
+    // Consultar todas las acciones de la tabla `document_actions`
+    const result = await pool.query('SELECT * FROM document_actions');
+
+    const actions = result.rows;
+
+    res.json({
+      success: true,
+      actions: actions // Devuelve la lista completa de acciones
+    });
+  } catch (error) {
+    console.error("Error al obtener todas las acciones:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      error: error.message
+    });
+  }
+});
+
+// Ruta para eliminar una acción por ID
+router.delete('/actions/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM document_actions WHERE id = $1 RETURNING *', [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Acción no encontrada',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Acción eliminada exitosamente',
+      deletedAction: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Error al eliminar la acción:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor',
+      error: error.message,
+    });
+  }
+});
+
+router.post('/actions', async (req, res) => {
+  const { configuration_id, entity_type, action_name, action_type, code } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO document_actions (configuration_id, entity_type, action_name, action_type, code, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       RETURNING *`,
+      [configuration_id, entity_type, action_name, action_type || '', code || {}]
+    );
+
+    res.json({
+      success: true,
+      message: 'Acción creada correctamente',
+      action: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error al crear la acción:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al crear la acción',
+      error: error.message
+    });
+  }
+});
 
 // Ruta para obtener todas las inspecciones
 router.get('/inspections', async (req, res) => {
@@ -8355,6 +8483,130 @@ router.post('/enviar-botix-acta', async (req, res) => {
   } catch (error) {
     console.error('❌ Error general al enviar a Botix:', error.response?.data || error.message);
     res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+});
+
+const enviarCorreo = async ({ to, subject, html, attachments }) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS
+    }
+  });
+
+  return transporter.sendMail({
+    from: `"Impecol SAS" <${process.env.MAIL_USER}>`,
+    to,
+    subject,
+    html,
+    attachments
+  });
+};
+
+router.post('/enviar-acta-por-correo', async (req, res) => {
+  try {
+    const { nombre, telefono, correo, documento, nombreDocumento } = req.body;
+    console.log("📞 Teléfono:", telefono);
+    console.log("📧 Correo:", correo);
+    console.log("📄 Documento:", documento);
+    console.log("📎 Nombre del documento:", nombreDocumento);
+
+    let downloadUrl = documento;
+
+    // 1. Firmar la URL si no está firmada
+    if (!documento.includes('X-Amz-Signature')) {
+      console.log('🔐 Generando URL firmada...');
+      const prefirm = await axios.post(`${process.env.BACKEND_URL}/api/PrefirmarArchivos`, { url: documento });
+      downloadUrl = prefirm.data.signedUrl;
+      console.log("✅ URL firmada:", downloadUrl);
+    }
+
+    // 2. Descargar archivo y guardar temporalmente
+    const extension = getExtensionFromUrl(downloadUrl);
+    const safeName = nombreDocumento.replace(/\s+/g, '_');
+    const fileName = `${uuidv4()}-${safeName}${extension}`;
+    const localPath = path.join(__dirname, '../temp', fileName);
+    const writer = fs.createWriteStream(localPath);
+
+    const responseStream = await axios.get(downloadUrl, { responseType: 'stream' });
+    responseStream.data.pipe(writer);
+
+    await new Promise((resolve, reject) => {
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+
+    console.log("📁 Archivo guardado:", localPath);
+
+    // 3. Enviar por correo
+    const subject = `Documento "${nombreDocumento}" - Impecol SAS`;
+    const html = `
+      <div style="background-color: #f0f0f0; padding: 40px 0; font-family: Arial, sans-serif; text-align: center;">
+        <div style="max-width: 587px; width: 100%; margin: 0 auto;
+                    background-image: url('https://drive.google.com/uc?id=14OFGD16mPopx9q7EhMdR3Mf-oPtk39Go');
+                    background-size: cover; background-position: top center; border-radius: 12px;
+                    padding: 60px 30px; background-repeat: no-repeat;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.1); background-color: white; text-align: left;">
+
+          <div style="padding: 35px; border-radius: 12px;">
+            <h2 style="color: #28a745;">Estimado(a) ${nombre},</h2>
+
+            <p style="color: rgb(28, 28, 28);">Esperamos que se encuentre muy bien.</p>
+
+            <p style="color: rgb(28, 28, 28);">
+              Le compartimos en este correo el documento <strong>"${nombreDocumento}"</strong>, el cual ha sido generado como parte del proceso de atención de <strong>Impecol SAS</strong>.
+            </p>
+
+            <p style="color: rgb(28, 28, 28);">
+              Le agradecemos sinceramente la confianza depositada en nosotros. Estamos comprometidos con ofrecerle siempre un servicio de calidad.
+            </p>
+
+            <p style="color: rgb(28, 28, 28);">
+              Si tiene alguna inquietud o desea más información, no dude en comunicarse con nuestro equipo de atención.
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+          <small style="display: block; margin-bottom: 5px; color: #777;">
+            Powered by Axioma Robotics
+          </small>
+          <a href="https://wa.me/573177381752" target="_blank" rel="noopener noreferrer">
+            <img src="https://drive.google.com/uc?id=1NqsmffR3cY6zvtJ1U3SuB67NP_JyQ8Mh" alt="Axioma Robotics"
+                style="height: 40px; padding: 2px 6px; border-radius: 6px; box-shadow: 0 0 5px rgba(0,0,0,0.1);" />
+          </a>
+        </div>
+      </div>
+    `;
+
+    const result = await enviarCorreo({
+      to: correo,
+      subject,
+      html,
+      attachments: [{
+        filename: nombreDocumento + extension,
+        path: localPath
+      }]
+    });
+
+    console.log('✅ Correo enviado:', result.messageId);
+
+    // 4. Eliminar archivo temporal después de 3 minutos
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(localPath);
+        console.log("🗑 Archivo eliminado tras 3 minutos:", localPath);
+      } catch (err) {
+        console.warn("⚠️ No se pudo eliminar el archivo:", err.message);
+      }
+    }, 180000);
+
+    res.json({ success: true, messageId: result.messageId });
+
+  } catch (error) {
+    console.error("❌ Error general:", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
