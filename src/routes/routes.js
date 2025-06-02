@@ -1177,7 +1177,7 @@ router.post('/services', async (req, res) => {
 // Obtener todos los servicios
 router.get('/services', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM services');
+    const result = await pool.query('SELECT * FROM services ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (error) {
     console.error("Error fetching services:", error);
