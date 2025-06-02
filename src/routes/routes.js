@@ -2540,6 +2540,61 @@ router.post('/actions', async (req, res) => {
   }
 });
 
+// routes/actions.js  (o donde tengas tu router)
+router.put('/actions/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    configuration_id,
+    entity_type,
+    action_name,
+    action_type,
+    code,
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE document_actions
+       SET configuration_id = $1,
+           entity_type      = $2,
+           action_name      = $3,
+           action_type      = $4,
+           code             = $5,
+           updated_at       = NOW()
+       WHERE id = $6
+       RETURNING *`,
+      [
+        configuration_id,
+        entity_type,
+        action_name,
+        action_type || '',
+        code || {},          // Asegúrate de que la columna sea JSON/JSONB
+        id,
+      ]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Acción no encontrada',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Acción actualizada correctamente',
+      action: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Error al actualizar la acción:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar la acción',
+      error: error.message,
+    });
+  }
+});
+
+
 // Ruta para obtener todas las inspecciones
 router.get('/inspections', async (req, res) => {
   try {
@@ -4777,7 +4832,7 @@ const transformEntity = (entity) => {
 
 // Ruta principal para almacenar configuración y código generado
 router.post('/save-configuration', async (req, res) => {
-  const { templateId, variables, tablas, entity, aiModels, document_name, document_type } = req.body;
+  const { configId, templateId, variables, tablas, entity, aiModels, document_name, document_type } = req.body;
 
   try {
     console.log("=== Iniciando almacenamiento de configuración ===");
@@ -7196,51 +7251,114 @@ router.post('/save-configuration', async (req, res) => {
     console.log("=== Código generado ===");
     //console.log(generatedCode);
 
-    // Guardar la configuración y el código generado en la base de datos
-    const insertQuery = `
+    const configuration = { ...req.body };
+
+    let configurationId;
+
+    if (configId) {
+      /* ---- UPDATE ----  (sólo tocamos los campos que deben cambiar) */
+      const updateQuery = `
+        UPDATE document_configuration
+        SET configuration   = $1,
+            generated_code  = $2
+        WHERE id = $3
+        RETURNING id
+      `;
+
+      const { rows } = await pool.query(updateQuery, [
+        JSON.stringify(configuration),
+        generatedCode,
+        configId
+      ]);
+
+      if (!rows.length) {
+        return res.status(404).json({ message: 'Configuración no encontrada.' });
+      }
+
+      configurationId = rows[0].id;
+
+      console.log(`Configuración ${configurationId} actualizada.`);
+      return res.status(200).json({ message: 'Configuración actualizada correctamente.' });
+
+    } else {
+      // Guardar la configuración y el código generado en la base de datos
+      const insertQuery = `
       INSERT INTO document_configuration (template_id, configuration, generated_code, created_at, entity)
       VALUES ($1, $2, $3, NOW(), $4)
       RETURNING id
     `;
 
-    const configuration = {
-      aiModels,
-      variables,
-      tablas,
-    };
+      const result = await pool.query(insertQuery, [
+        templateId,
+        JSON.stringify(configuration),
+        generatedCode,
+        transformedEntity,
+      ]);
 
-    const result = await pool.query(insertQuery, [
-      templateId,
-      JSON.stringify(configuration),
-      generatedCode,
-      transformedEntity,
-    ]);
+      const configurationId = result.rows[0].id;
 
-    const configurationId = result.rows[0].id;
-
-    // Registrar la acción en la tabla document_actions
-    const insertActionQuery = `
+      // Registrar la acción en la tabla document_actions
+      const insertActionQuery = `
       INSERT INTO document_actions (configuration_id, entity_type, action_type, action_name, created_at)
       VALUES ($1, $2, $3, $4, NOW())
     `;
 
-    const actionType = `generate_${document_type}`;
-    const actionName = `Generar ${document_name}`;
+      const actionType = `generate_${document_type}`;
+      const actionName = `Generar ${document_name}`;
 
-    await pool.query(insertActionQuery, [
-      configurationId,
-      transformedEntity,
-      actionType,
-      actionName,
-    ]);
+      await pool.query(insertActionQuery, [
+        configurationId,
+        transformedEntity,
+        actionType,
+        actionName,
+      ]);
 
-    console.log("Configuración y código almacenados correctamente en la base de datos.");
-    res.status(201).json({ message: 'Configuración guardada correctamente.' });
+      console.log("Configuración y código almacenados correctamente en la base de datos.");
+      res.status(201).json({ message: 'Configuración guardada correctamente.' });
+    }
   } catch (error) {
     console.error("Error al almacenar la configuración:", error.message);
     res.status(500).json({ message: 'Error interno del servidor', error: error.message });
   }
 });
+
+// GET /api/get-configuration/:configId
+router.get('/get-configuration/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log(`consultando para el id ${id}`)
+  try {
+    const q = `
+      SELECT id,
+             template_id,
+             entity,
+             configuration
+      FROM   document_configuration
+      WHERE  id = $1
+    `;
+    const { rows } = await pool.query(q, [id]);
+
+    if (rows.length === 0)
+      return res.status(404).json({ message: 'Configuración no encontrada' });
+
+    // pg devuelve JSONB como objeto JS si la conexión tiene parseJson habilitado;
+    // si no, parseamos:
+    const row = rows[0];
+    const configuration = typeof row.configuration === 'string'
+      ? JSON.parse(row.configuration)
+      : row.configuration;
+
+    res.json({
+      id: row.id,
+      templateId: row.template_id,
+      entity: row.entity,
+      ...configuration            // ←   inyecta todo el JSON que necesita el front
+    });
+  } catch (err) {
+    console.error('[get-configuration]', err);
+    res.status(500).json({ message: 'Error interno', error: err.message });
+  }
+});
+
 
 // Ruta para ejecutar código dinámico almacenado
 router.post('/create-document-client', async (req, res) => {
