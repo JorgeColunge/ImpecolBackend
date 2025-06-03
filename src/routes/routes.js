@@ -8728,4 +8728,67 @@ router.post('/enviar-acta-por-correo', async (req, res) => {
   }
 });
 
+
+router.get('/tutorials', async (_req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM tutorials ORDER BY created_at DESC'
+    );
+    res.json({ success: true, tutorials: result.rows });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, message: 'Error al obtener tutoriales' });
+  }
+});
+
+router.post('/tutorials', async (req, res) => {
+  const { title, youtube_url, description } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO tutorials (title, youtube_url, description)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [title, youtube_url, description]
+    );
+    res.json({ success: true, tutorial: result.rows[0] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, message: 'Error al crear tutorial' });
+  }
+});
+
+/* ========== PUT editar tutorial ========== */
+router.put('/tutorials/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, youtube_url, description } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE tutorials
+         SET title = $1,
+             youtube_url = $2,
+             description = $3,
+             created_at = created_at          -- no cambies orden cronológico
+       WHERE id = $4
+       RETURNING *`,
+      [title, youtube_url, description, id]
+    );
+    res.json({ success: true, tutorial: result.rows[0] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, message: 'Error al editar tutorial' });
+  }
+});
+
+/* ========== DELETE eliminar tutorial ========== */
+router.delete('/tutorials/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM tutorials WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, message: 'Error al eliminar tutorial' });
+  }
+});
+
+
 module.exports = router;
